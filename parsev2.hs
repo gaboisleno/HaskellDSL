@@ -1,4 +1,4 @@
-module AST where
+module Main where
 
 import Data.Char
 import System.Environment
@@ -9,19 +9,42 @@ import Text.Parsec.String
 
 import Text.ParserCombinators.Parsec.Expr
 import Text.ParserCombinators.Parsec.Language
-import Text.ParserCombinators.Parsec hiding (spaces)
+import Text.ParserCombinators.Parsec hiding (spaces) --"hiding (spaces)" es porque hice mi propia funcion spaces
 
---hiding spaces porque yo hago mi propia funcion spaces
+data Color = Rojo | Azul | Amarillo | Negro | Blanco deriving (Show)
+data Punto = Punto Integer Integer deriving (Eq, Show)
 
-data Punto = Punto Integer Integer deriving (Show)
-
-data Linea = Linea Punto Punto deriving (Show)
-
-data Forma = Texto String
-           | Cuadrado Integer
-           | Rectangulo Integer Integer
+data Forma = Texto String               --Texto ("texto", Punto)
+           | Linea [Punto]              --Linea([Punto, Punto])
+           | Cuadrado Integer           --Cuadrado (Lado, Punto)
+           | Rectangulo Integer Integer --Rectangulo (Lado, Lado, Punto)
+           | Circulo Integer Integer    --Circulo (Radio, Punto)
+           | Poligono [Punto]           --Poligono ([Punto, Punto, Punto])
  deriving(Show, Eq)
 
+{-
+ToDo:
+Reemplazar Integer por Double
+Elipse: recibe un punto en el espacio, y dos doubles
+Agregar colores: rojo azul verde amarillo cian magenta negro blanco
+-}
+
+main :: IO ()
+main = do
+           (expr:_) <- getArgs
+           putStrLn (readExpr expr)
+
+readExpr :: String -> String
+readExpr input =
+    case parse parseExpr "" input of 
+        Right val  -> "Found value: " ++ show val 
+        Left err   -> "Fail on: " ++ show err
+    
+
+parseExpr :: Parser Forma
+parseExpr =  parseTexto
+         <|> parseLinea
+         <|> parseCuadrado
 
 regularParse :: Parser a -> String -> Either ParseError a
 regularParse p = parse p ""
@@ -29,22 +52,22 @@ regularParse p = parse p ""
 spaces :: Parser ()
 spaces = void $ many $ oneOf(" \n\t")
 
-
 parsePunto :: Parser Punto
 parsePunto = do
-				spaces
-				e0 <- many1 digit
-				spaces
-				e1 <- many1 digit
-				return $ (Punto (read e0) (read e1))
+                char '('
+                e0 <- many1 digit
+                char ','
+                e1 <- many1 digit
+                char ')'
+                return $ (Punto (read e0) (read e1))
 
 
 --El parse punto no devuelve un Punto, devuelve un either
-parseLinea :: Parser Linea
+parseLinea :: Parser Forma
 parseLinea = do
-			p1 <- parsePunto
-			p2 <- parsePunto
-			return $ (Linea (p1) (p2))
+                p1 <- parsePunto
+                p2 <- parsePunto
+                return $ (Linea [p1, p2])
 
 parseTexto :: Parser Forma
 parseTexto = do
@@ -55,21 +78,44 @@ parseTexto = do
 
 parseCuadrado :: Parser Forma
 parseCuadrado = do
-				x <- many1 digit
-				return $ (Cuadrado (read x))
-
-
-parseRectangulo :: Parser Forma
-parseRectangulo = do
-					spaces
-					e0 <- many1 digit
-					spaces
-					e1 <- many1 digit
-					return $ (Rectangulo (read e0) (read e1))
-                   
+                    char 'c' --idenficador para declarar un cuadrado
+                    char '('
+                    x <- many1 digit
+                    char ')'
+                    return $ (Cuadrado (read x))
 
 {-
-*AST> regularParse parseTexto "\"Hola mundo\""
-*AST> regularParse parsePunto "1 2"
-*AST> regularParse parseLinea  "2 1 2 3"
+parseRectangulo :: Parser Forma
+parseRectangulo = do
+                    char '('
+                    e0 <- many1 digit
+                    char ','
+                    e1 <- many1 digit
+                    char ')'
+                    return $ (Rectangulo (read e0) (read e1))
+-}                   
+
+{-
+
+Uso sin compilar:
+
+*Main> regularParse parseTexto "\"Hola mundo\""
+*Main> regularParse parsePunto "1 2"
+*Main> regularParse parseLinea  "2 1 2 3"
+
+Uso compilado: 
+
+Compilar:
+$ ghc -o main parsev2.hs
+
+Ejecutar:
+$ ./main "2 2"
+Found value: Rectangulo 2 2
+
+$ ./main "\"Hola\""
+Found value: Texto "Hola"
+
+$ ./main "c(2)"
+Found value: Cuadrado 2
+
 -}
