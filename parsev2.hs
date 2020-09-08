@@ -80,6 +80,7 @@ parseLinea = do
 
 parseTexto :: Parser Forma
 parseTexto = do
+                string "Texto"
                 char '"'
                 x <- many (noneOf("\""))
                 char '"'
@@ -114,17 +115,24 @@ Uso sin compilar:
 
 Uso compilado: 
 
-Compilar:
+1) Compilar:
 $ ghc -o main parsev2.hs
 
-Ejecutar:
-$ ./main "2 2"
+2) Ejecutar:
+
+$ ./main "Texto\"Hola Mundo\""
+Found value: Texto "Hola Mundo"
+
+$ ./main "Rectangulo(2,2)"
 Found value: Rectangulo 2 2
 
-$ ./main "\"Hola\""
-Found value: Texto "Hola"
-
-$ ./main "c(2)"
+$ ./main "Cuadrado(2)"
 Found value: Cuadrado 2
+
+$ ./main "Punto(2,2)"
+Found value: Punto 2 2
+
+$ ./main "Linea(Punto(2,2),Punto(3,3))"
+Found value: Linea [Punto 2 2,Punto 3 3]
 
 -}
