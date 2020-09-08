@@ -38,13 +38,17 @@ readExpr :: String -> String
 readExpr input =
     case parse parseExpr "" input of 
         Right val  -> "Found value: " ++ show val 
-        Left err   -> "Fail on: " ++ show err
+        Left err   -> case parse parsePunto "" input of
+                        Right val  -> "Found value: " ++ show val
+                        Left err   -> "Fail on: " ++ show err
+           
     
 
 parseExpr :: Parser Forma
 parseExpr =  parseTexto
          <|> parseLinea
          <|> parseCuadrado
+         <|> parseRectangulo
 
 regularParse :: Parser a -> String -> Either ParseError a
 regularParse p = parse p ""
@@ -54,6 +58,7 @@ spaces = void $ many $ oneOf(" \n\t")
 
 parsePunto :: Parser Punto
 parsePunto = do
+                string "Punto"
                 char '('
                 e0 <- many1 digit
                 char ','
@@ -65,8 +70,12 @@ parsePunto = do
 --El parse punto no devuelve un Punto, devuelve un either
 parseLinea :: Parser Forma
 parseLinea = do
+                string "Linea"
+                char '('
                 p1 <- parsePunto
+                char ','
                 p2 <- parsePunto
+                char ')'
                 return $ (Linea [p1, p2])
 
 parseTexto :: Parser Forma
@@ -78,22 +87,22 @@ parseTexto = do
 
 parseCuadrado :: Parser Forma
 parseCuadrado = do
-                    char 'c' --idenficador para declarar un cuadrado
+                    string "Cuadrado" --idenficador para declarar un cuadrado
                     char '('
                     x <- many1 digit
                     char ')'
                     return $ (Cuadrado (read x))
 
-{-
+
 parseRectangulo :: Parser Forma
 parseRectangulo = do
+                    string "Rectangulo"
                     char '('
                     e0 <- many1 digit
                     char ','
                     e1 <- many1 digit
                     char ')'
-                    return $ (Rectangulo (read e0) (read e1))
--}                   
+                    return $ (Rectangulo (read e0) (read e1))                  
 
 {-
 
