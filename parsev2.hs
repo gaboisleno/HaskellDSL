@@ -48,7 +48,7 @@ parseExpr :: Parser Forma
 parseExpr =  parseTexto
          <|> parseLinea
          <|> parseCuadrado
-         <|> parseRectangulo
+         <|>  parseRectangulo
 
 regularParse :: Parser a -> String -> Either ParseError a
 regularParse p = parse p ""
@@ -97,10 +97,20 @@ parseCuadrado = do
 
 parseRectangulo :: Parser Forma
 parseRectangulo = do
-                    string "Rectangulo"
-                    char '('
+                    void $ lexeme $ string "Rectangulo"
+                    void $ lexeme $ char '('
                     e0 <- many1 digit
-                    char ','
+                    void $ lexeme $ char ','
                     e1 <- many1 digit
-                    char ')'
+                    void $ lexeme $ char ')'
                     return $ (Rectangulo (read e0) (read e1))                  
+
+
+lexeme :: Parser a -> Parser a
+lexeme p = do
+            spaces
+            x <- p 
+            spaces
+            return x
+
+{-Eval-}
