@@ -1,13 +1,13 @@
-#DSL Programacion Profesional
+# DSL Programacion Profesional
 
-###Uso sin compilar:
+### Uso sin compilar:
 
 ```sh
 *Main> regularParse parseTexto "\"Hola mundo\""
 *Main> regularParse parsePunto "1 2"
 *Main> regularParse parseLinea  "2 1 2 3"
 ```
-###Uso compilado: 
+### Uso compilado: 
 
 1) Compilar:	
 
@@ -34,7 +34,7 @@ $ ./main "Linea(Punto(2,2),Punto(3,3))"
 Found value: Linea [Punto 2 2,Punto 3 3]
 ```
 
-###Docs + Instalation
+### Docs + Instalation
 | Package | Source |
 | ------- | ------ |
 | Cabal | https://www.haskell.org/cabal/ |
@@ -43,4 +43,3 @@ Found value: Linea [Punto 2 2,Punto 3 3]
 | Latex | https://www.latex-project.org |
 | Parsec | https://hackage.haskell.org/package/parsec |
 | Tikz | https://www.overleaf.com/learn/latex/TikZ_package |
-| 
