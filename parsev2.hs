@@ -104,35 +104,3 @@ parseRectangulo = do
                     e1 <- many1 digit
                     char ')'
                     return $ (Rectangulo (read e0) (read e1))                  
-
-{-
-
-Uso sin compilar:
-
-*Main> regularParse parseTexto "\"Hola mundo\""
-*Main> regularParse parsePunto "1 2"
-*Main> regularParse parseLinea  "2 1 2 3"
-
-Uso compilado: 
-
-1) Compilar:
-$ ghc -o main parsev2.hs
-
-2) Ejecutar:
-
-$ ./main "Texto\"Hola Mundo\""
-Found value: Texto "Hola Mundo"
-
-$ ./main "Rectangulo(2,2)"
-Found value: Rectangulo 2 2
-
-$ ./main "Cuadrado(2)"
-Found value: Cuadrado 2
-
-$ ./main "Punto(2,2)"
-Found value: Punto 2 2
-
-$ ./main "Linea(Punto(2,2),Punto(3,3))"
-Found value: Linea [Punto 2 2,Punto 3 3]
-
--}
