@@ -34,6 +34,14 @@ main = do
            (expr:_) <- getArgs
            putStrLn (readExpr expr)
 
+
+split :: String -> [String]
+split [] = [""]
+split (c:cs) | c == ';' = "" : rest
+             | otherwise = (c : head rest) : tail rest
+    where rest = split cs
+
+
 readExpr :: String -> String
 readExpr input =
     case parse parseExpr "" input of 
@@ -41,14 +49,12 @@ readExpr input =
         Left err   -> case parse parsePunto "" input of
                         Right val  -> "Found value: " ++ show val
                         Left err   -> "Fail on: " ++ show err
-           
-    
 
 parseExpr :: Parser Forma
 parseExpr =  parseTexto
          <|> parseLinea
          <|> parseCuadrado
-         <|>  parseRectangulo
+         <|> parseRectangulo
 
 regularParse :: Parser a -> String -> Either ParseError a
 regularParse p = parse p ""
@@ -58,51 +64,51 @@ spaces = void $ many $ oneOf(" \n\t")
 
 parsePunto :: Parser Punto
 parsePunto = do
-                string "Punto"
-                char '('
+                lexeme $ string "Punto"
+                lexeme $ char '('
                 e0 <- many1 digit
-                char ','
+                lexeme $ char ','
                 e1 <- many1 digit
-                char ')'
+                lexeme $ char ')'
                 return $ (Punto (read e0) (read e1))
 
 
 --El parse punto no devuelve un Punto, devuelve un either
 parseLinea :: Parser Forma
 parseLinea = do
-                string "Linea"
-                char '('
+                lexeme $ string "Linea"
+                lexeme $ char '('
                 p1 <- parsePunto
-                char ','
+                lexeme $ char ','
                 p2 <- parsePunto
-                char ')'
+                lexeme $ char ')'
                 return $ (Linea [p1, p2])
 
 parseTexto :: Parser Forma
 parseTexto = do
-                string "Texto"
-                char '"'
+                lexeme $ string "Texto"
+                lexeme $ char '"'
                 x <- many (noneOf("\""))
-                char '"'
+                lexeme $ char '"'
                 return $ Texto x
 
 parseCuadrado :: Parser Forma
 parseCuadrado = do
-                    string "Cuadrado" --idenficador para declarar un cuadrado
-                    char '('
+                    lexeme $ string "Cuadrado" --idenficador para declarar un cuadrado
+                    lexeme $ char '('
                     x <- many1 digit
-                    char ')'
+                    lexeme $ char ')'
                     return $ (Cuadrado (read x))
 
 
 parseRectangulo :: Parser Forma
 parseRectangulo = do
-                    void $ lexeme $ string "Rectangulo"
-                    void $ lexeme $ char '('
+                    lexeme $ string "Rectangulo"
+                    lexeme $ char '('
                     e0 <- many1 digit
-                    void $ lexeme $ char ','
+                    lexeme $ char ','
                     e1 <- many1 digit
-                    void $ lexeme $ char ')'
+                    lexeme $ char ')'
                     return $ (Rectangulo (read e0) (read e1))                  
 
 

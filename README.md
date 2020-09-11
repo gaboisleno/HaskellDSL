@@ -43,4 +43,5 @@ Found value: Linea [Punto 2 2,Punto 3 3]
 | Latex | https://www.latex-project.org |
 | Parsec | https://hackage.haskell.org/package/parsec |
 | Tikz | https://www.overleaf.com/learn/latex/TikZ_package |
-| Intro to parsing | jakewheat.github.io/intro_to_parsing |
+| Intro to parsing | http://jakewheat.github.io/intro_to_parsing |
+| Scheme in 48hs | https://en.wikibooks.org/wiki/Write_Yourself_a_Scheme_in_48_Hours |
