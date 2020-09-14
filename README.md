@@ -6,6 +6,9 @@
 *Main> regularParse parseTexto "\"Hola mundo\""
 *Main> regularParse parsePunto "1 2"
 *Main> regularParse parseLinea  "2 1 2 3"
+
+*Main> commands "Punto(2, 2); Punto(3 , 3) ; Punto (5,2)"
+"Punto 2 2 Punto 3 3 Punto 5 2"
 ```
 ### Uso compilado: 
 

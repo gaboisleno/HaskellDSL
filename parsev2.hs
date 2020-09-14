@@ -34,6 +34,10 @@ main = do
            (expr:_) <- getArgs
            putStrLn (readExpr expr)
 
+{- 
+Combinando split y process 
+se puede leer y procesar varios comandos separados por ';' 
+-}
 
 split :: String -> [String]
 split [] = [""]
@@ -41,11 +45,18 @@ split (c:cs) | c == ';' = "" : rest
              | otherwise = (c : head rest) : tail rest
     where rest = split cs
 
+process :: [String] -> String
+process [] = "Fin"
+process [x] = readExpr x
+process (x:xs) = readExpr x ++ process xs
+
+commands :: String -> String
+commands x = process (split x)
 
 readExpr :: String -> String
 readExpr input =
     case parse parseExpr "" input of 
-        Right val  -> "Found value: " ++ show val 
+        Right val  -> "Found value: " ++ show val
         Left err   -> case parse parsePunto "" input of
                         Right val  -> "Found value: " ++ show val
                         Left err   -> "Fail on: " ++ show err
