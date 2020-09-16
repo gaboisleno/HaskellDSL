@@ -4,12 +4,16 @@ import Data.Char
 import System.Environment
 import Control.Monad
 
+import Text.Printf
+
 import Text.Parsec hiding (spaces)
 import Text.Parsec.String
-
 import Text.ParserCombinators.Parsec.Expr
 import Text.ParserCombinators.Parsec.Language
 import Text.ParserCombinators.Parsec hiding (spaces) --"hiding (spaces)" es porque hice mi propia funcion spaces
+
+import Text.LaTeX
+import Text.LaTeX.Packages.TikZ.Simple
 
 data Color = Rojo | Azul | Amarillo | Negro | Blanco deriving (Show)
 data Punto = Punto Integer Integer deriving (Eq, Show)
@@ -46,20 +50,21 @@ split (c:cs) | c == ';' = "" : rest
     where rest = split cs
 
 process :: [String] -> String
-process [] = "Fin"
+process [] = ""
 process [x] = readExpr x
-process (x:xs) = readExpr x ++ process xs
+process (x:xs) = readExpr x ++ ", " ++ process xs
 
 commands :: String -> String
 commands x = process (split x)
 
 readExpr :: String -> String
 readExpr input =
-    case parse parseExpr "" input of 
-        Right val  -> "Found value: " ++ show val
-        Left err   -> case parse parsePunto "" input of
-                        Right val  -> "Found value: " ++ show val
-                        Left err   -> "Fail on: " ++ show err
+    case parse parseExpr " " input of 
+        Right val  -> show val
+        Left err   -> show err
+        {-case parse parsePunto "" input of
+                        Right val  -> show val
+                        Left err   -> "Fail on: " ++ show err-}
 
 parseExpr :: Parser Forma
 parseExpr =  parseTexto
@@ -131,3 +136,17 @@ lexeme p = do
             return x
 
 {-Eval-}
+
+--Procesa una Forma y la transforma en Figure
+formToFigure :: Forma -> String
+formToFigure (Cuadrado x) = printf "Rectangle (0,0) %d %d" x x
+formToFigure (Rectangulo x y) = printf "Rectangle (0,0) %d %d" x y
+-- ...
+-- ...
+-- ...
+
+--Procesa un array de Forma y lo transforma en un array de Figure
+convertForms :: [Forma] -> [String]
+convertForms [] = []
+convertForms [x] = [formToFigure x] 
+convertForms (x:xs) = [formToFigure x] ++ convertForms xs
