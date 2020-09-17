@@ -6,35 +6,21 @@
 *Main> regularParse parseTexto "\"Hola mundo\""
 *Main> regularParse parsePunto "1 2"
 *Main> regularParse parseLinea  "2 1 2 3"
-
-*Main> commands "Punto(2, 2); Punto(3 , 3) ; Punto (5,2)"
-"Punto 2 2 Punto 3 3 Punto 5 2"
 ```
 ### Uso compilado: 
 
 1) Compilar:	
 
 ```sh
-$ ghc -o main parsev2.hs
+$ ghc -o main parser.hs
 ```
 
 2) Ejecutar:
 
 ```sh
-$ ./main "Texto\"Hola Mundo\""
-Found value: Texto "Hola Mundo"
+$ ./main "Linea(Punto(2,2), Punto(4,4)); Cuadrado(2)"
+[Linea [Punto 2 2,Punto 4 4],Cuadrado 2]
 
-$ ./main "Rectangulo(2,2)"
-Found value: Rectangulo 2 2
-
-$ ./main "Cuadrado(2)"
-Found value: Cuadrado 2
-
-$ ./main "Punto(2,2)"
-Found value: Punto 2 2
-
-$ ./main "Linea(Punto(2,2),Punto(3,3))"
-Found value: Linea [Punto 2 2,Punto 3 3]
 ```
 
 ### Docs + Instalation
