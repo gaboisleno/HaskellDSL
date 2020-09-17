@@ -6,7 +6,7 @@ data Punto = Punto Integer Integer deriving (Eq, Show)
 
 data Forma = Texto String               --Texto ("texto", Punto)
            | Linea [Punto]              --Linea([Punto, Punto])
-           | Cuadrado Integer           --Cuadrado (Lado, Punto)
+           | Cuadrado Double           --Cuadrado (Lado, Punto)
            | Rectangulo Integer Integer --Rectangulo (Lado, Lado, Punto)
            | Circulo Integer Integer    --Circulo (Radio, Punto)
            | Poligono [Punto]           --Poligono ([Punto, Punto, Punto])
