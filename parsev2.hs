@@ -26,22 +26,11 @@ data Forma = Texto String               --Texto ("texto", Punto)
            | Poligono [Punto]           --Poligono ([Punto, Punto, Punto])
  deriving(Show, Eq)
 
-{-
-ToDo:
-Reemplazar Integer por Double
-Elipse: recibe un punto en el espacio, y dos doubles
-Agregar colores: rojo azul verde amarillo cian magenta negro blanco
--}
-
 main :: IO ()
 main = do
            (expr:_) <- getArgs
-           putStrLn (readExpr expr)
+           putStrLn (commands expr)
 
-{- 
-Combinando split y process 
-se puede leer y procesar varios comandos separados por ';' 
--}
 
 split :: String -> [String]
 split [] = [""]
@@ -57,17 +46,17 @@ process (x:xs) = readExpr x ++ ", " ++ process xs
 commands :: String -> String
 commands x = process (split x)
 
+
 readExpr :: String -> String
-readExpr input =
-    case parse parseExpr " " input of 
-        Right val  -> show val
+readExpr input = case parse (spaces >> parseExpr) "" input of 
         Left err   -> show err
+        Right val  -> show val
         {-case parse parsePunto "" input of
                         Right val  -> show val
                         Left err   -> "Fail on: " ++ show err-}
 
 parseExpr :: Parser Forma
-parseExpr =  parseTexto
+parseExpr = parseTexto
          <|> parseLinea
          <|> parseCuadrado
          <|> parseRectangulo
@@ -119,7 +108,7 @@ parseCuadrado = do
 
 parseRectangulo :: Parser Forma
 parseRectangulo = do
-                    lexeme $ string "Rectangulo"
+                    spaces >> string "Rectangulo"
                     lexeme $ char '('
                     e0 <- many1 digit
                     lexeme $ char ','
