@@ -33,7 +33,7 @@ data Forma = Texto String               --Texto ("texto", Punto)
 main :: IO ()
 main = do
            (expr:_) <- getArgs
-           putStrLn (show (commands expr))
+           putStrLn (show (expr))
            --putStrLn (commands expr)
 
 {-Parser-}
@@ -44,20 +44,20 @@ split (c:cs) | c == ';' = "" : rest
              | otherwise = (c : head rest) : tail rest
     where rest = split cs
 
+
 process :: [String] -> [Forma]
 process [] = []
-process [x] = [readExpr x]
-process (x:xs) = [readExpr x] ++ process xs
+process (x:xs) = case readExpr x of
+                Left err -> fail ("Error: " ++ show err) putStrLn
+                Right forma -> [forma] ++ process xs
+
 
 commands :: String -> [Forma]
 commands x = process (split x)
 
-readExpr :: String -> Forma
-readExpr input = case parse (spaces >> parseExpr) "" input of 
-        Left err   ->  Cuadrado 2
-        Right val  ->  val
-        --FIX THIS !!!!!
-        --La funcion debe devolver un tipo Forma, pero si falla devuelve tipo ParserError. No se como hacerlo.
+
+readExpr :: String -> Either ParseError Forma
+readExpr input = parse (spaces >> parseExpr) "" input 
 
 parseExpr :: Parser Forma
 parseExpr = parseTexto
