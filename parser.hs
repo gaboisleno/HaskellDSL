@@ -4,7 +4,7 @@ import Data.Char
 import System.Environment
 import Control.Monad
 
-import Text.Printf
+import Text.Printf --Remove this when it is finished
 
 import Text.Parsec hiding (spaces)
 import Text.Parsec.String
@@ -14,6 +14,8 @@ import Text.ParserCombinators.Parsec hiding (spaces) --"hiding (spaces)" es porq
 
 import Text.LaTeX
 import Text.LaTeX.Packages.TikZ.Simple
+
+{-AST-}
 
 data Color = Rojo | Azul | Amarillo | Negro | Blanco deriving (Show)
 data Punto = Punto Integer Integer deriving (Eq, Show)
@@ -26,11 +28,15 @@ data Forma = Texto String               --Texto ("texto", Punto)
            | Poligono [Punto]           --Poligono ([Punto, Punto, Punto])
  deriving(Show, Eq)
 
+{-Main-}
+
 main :: IO ()
 main = do
            (expr:_) <- getArgs
-           putStrLn (commands expr)
+           putStrLn (show (commands expr))
+           --putStrLn (commands expr)
 
+{-Parser-}
 
 split :: String -> [String]
 split [] = [""]
@@ -38,22 +44,20 @@ split (c:cs) | c == ';' = "" : rest
              | otherwise = (c : head rest) : tail rest
     where rest = split cs
 
-process :: [String] -> String
-process [] = ""
-process [x] = readExpr x
-process (x:xs) = readExpr x ++ ", " ++ process xs
+process :: [String] -> [Forma]
+process [] = []
+process [x] = [readExpr x]
+process (x:xs) = [readExpr x] ++ process xs
 
-commands :: String -> String
+commands :: String -> [Forma]
 commands x = process (split x)
 
-
-readExpr :: String -> String
+readExpr :: String -> Forma
 readExpr input = case parse (spaces >> parseExpr) "" input of 
-        Left err   -> show err
-        Right val  -> show val
-        {-case parse parsePunto "" input of
-                        Right val  -> show val
-                        Left err   -> "Fail on: " ++ show err-}
+        Left err   ->  Cuadrado 2
+        Right val  ->  val
+        --FIX THIS !!!!!
+        --La funcion debe devolver un tipo Forma, pero si falla devuelve tipo ParserError. No se como hacerlo.
 
 parseExpr :: Parser Forma
 parseExpr = parseTexto
@@ -77,8 +81,6 @@ parsePunto = do
                 lexeme $ char ')'
                 return $ (Punto (read e0) (read e1))
 
-
---El parse punto no devuelve un Punto, devuelve un either
 parseLinea :: Parser Forma
 parseLinea = do
                 lexeme $ string "Linea"
@@ -99,7 +101,7 @@ parseTexto = do
 
 parseCuadrado :: Parser Forma
 parseCuadrado = do
-                    lexeme $ string "Cuadrado" --idenficador para declarar un cuadrado
+                    lexeme $ string "Cuadrado"
                     lexeme $ char '('
                     x <- many1 digit
                     lexeme $ char ')'
