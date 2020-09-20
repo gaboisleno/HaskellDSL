@@ -2,6 +2,7 @@ module Main where
 
 import Data.Char
 import System.Environment
+import System.Process
 import Control.Monad
 
 import Text.Printf --Remove this when it is finished
@@ -18,7 +19,7 @@ import Text.LaTeX.Packages.TikZ.Simple
 {-AST-}
 
 data Color = Rojo | Azul | Amarillo | Negro | Blanco deriving (Show)
-data Punto = Punto Integer Integer deriving (Eq, Show)
+data Punto = Punto Double Double deriving (Eq, Show)
 
 data Forma = Texto String               --Texto ("texto", Punto)
            | Linea [Punto]              --Linea([Punto, Punto])
@@ -30,11 +31,21 @@ data Forma = Texto String               --Texto ("texto", Punto)
 
 {-Main-}
 
+getX :: Punto -> Double
+getX (Punto x y) = x
+
+getY :: Punto -> Double
+getY (Punto x y) = y
+
+
 main :: IO ()
-main = do
-           (expr:_) <- getArgs
-           putStrLn (show (expr))
-           --putStrLn (commands expr)
+main = 
+    do
+        (file:_) <- getArgs
+        code <- readFile file
+        execLaTeXT (tikzsimple (convertForms(commands code))) >>= renderFile "tikzsimple.tex"
+        callCommand "pdflatex tikzsimple.tex"
+        putStrLn "Fin."
 
 {-Parser-}
 
@@ -53,7 +64,7 @@ process (x:xs) = case readExpr x of
 
 
 commands :: String -> [Forma]
-commands x = process (split x)
+commands x = process (filter (not . null ) (split x))
 
 
 readExpr :: String -> Either ParseError Forma
@@ -129,15 +140,23 @@ lexeme p = do
 {-Eval-}
 
 --Procesa una Forma y la transforma en Figure
-formToFigure :: Forma -> String
-formToFigure (Cuadrado x) = printf "Rectangle (0,0) %d %d" x x
-formToFigure (Rectangulo x y) = printf "Rectangle (0,0) %d %d" x y
--- ...
--- ...
--- ...
+formToFigure :: Forma -> Figure
+formToFigure (Cuadrado x) =  Rectangle (0,0) 2 2
+formToFigure (Rectangulo x y) = Rectangle (0,0) 5 6
 
 --Procesa un array de Forma y lo transforma en un array de Figure
-convertForms :: [Forma] -> [String]
+convertForms :: [Forma] -> [Figure]
 convertForms [] = []
 convertForms [x] = [formToFigure x] 
 convertForms (x:xs) = [formToFigure x] ++ convertForms xs
+
+tikzsimple :: [Figure] -> LaTeXT IO ()
+tikzsimple x = thePreamble >> document (theBody x)
+
+thePreamble :: LaTeXT IO ()
+thePreamble = do
+  documentclass [] article
+  usepackage [] tikz
+
+theBody :: [Figure] -> LaTeXT IO ()
+theBody x = mapM_ (center . tikzpicture . figuretikz) x --Lista de las figuras a dibujar
