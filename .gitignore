@@ -1,3 +1,10 @@
 *.o
 *.hi
+*.tex
+*.log
+*.aux
+*.pdf
+*.tex
+*.tik
+*.swp
 main
