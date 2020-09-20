@@ -43,9 +43,9 @@ main =
     do
         (file:_) <- getArgs
         code <- readFile file
-        execLaTeXT (tikzsimple (convertForms(commands code))) >>= renderFile "tikzsimple.tex"
-        callCommand "pdflatex tikzsimple.tex"
-        putStrLn "Fin."
+        execLaTeXT (tikzsimple (convertForms(commands code))) >>= renderFile (file++".tex")
+        callCommand ("pdflatex "++file++".tex")
+        putStrLn "Done."
 
 {-Parser-}
 
