@@ -6,6 +6,7 @@ import Control.Monad
 
 import Text.Parsec hiding (spaces)
 import Text.Parsec.String
+import Text.Parsec.Number(floating)
 
 import Text.ParserCombinators.Parsec.Expr
 import Text.ParserCombinators.Parsec.Language
@@ -19,17 +20,14 @@ split (c:cs) | c == ';' = "" : rest
              | otherwise = (c : head rest) : tail rest
     where rest = split cs
 
-
 process :: [String] -> [Forma]
 process [] = []
 process (x:xs) = case readExpr x of
                 Left err -> fail ("Error: " ++ show err) putStrLn
                 Right forma -> [forma] ++ process xs
 
-
 commands :: String -> [Forma]
 commands x = process (split x)
-
 
 readExpr :: String -> Either ParseError Forma
 readExpr input = parse (spaces >> parseExpr) "" input
@@ -50,11 +48,11 @@ parsePunto :: Parser Punto
 parsePunto = do
                 lexeme $ string "Punto"
                 lexeme $ char '('
-                e0 <- many1 digit
+                e0 <- floating
                 lexeme $ char ','
-                e1 <- many1 digit
+                e1 <- floating
                 lexeme $ char ')'
-                return $ (Punto (read e0) (read e1))
+                return $ (Punto e0 e1)
 
 parseLinea :: Parser Forma
 parseLinea = do
@@ -78,20 +76,20 @@ parseCuadrado :: Parser Forma
 parseCuadrado = do
                     lexeme $ string "Cuadrado"
                     lexeme $ char '('
-                    x <- many1 digit
+                    x <- floating
                     lexeme $ char ')'
-                    return $ (Cuadrado (read x))
+                    return $ (Cuadrado x)
 
 
 parseRectangulo :: Parser Forma
 parseRectangulo = do
                     spaces >> string "Rectangulo"
                     lexeme $ char '('
-                    e0 <- many1 digit
+                    e0 <- floating
                     lexeme $ char ','
-                    e1 <- many1 digit
+                    e1 <- floating
                     lexeme $ char ')'
-                    return $ (Rectangulo (read e0) (read e1))
+                    return $ (Rectangulo e0 e1)
 
 
 lexeme :: Parser a -> Parser a

@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Main where
 
 import Data.Char
@@ -39,7 +40,7 @@ getY (Punto x y) = y
 
 
 main :: IO ()
-main = 
+main =
     do
         (file:_) <- getArgs
         code <- readFile file
@@ -68,7 +69,7 @@ commands x = process (filter (not . null ) (split x))
 
 
 readExpr :: String -> Either ParseError Forma
-readExpr input = parse (spaces >> parseExpr) "" input 
+readExpr input = parse (spaces >> parseExpr) "" input
 
 parseExpr :: Parser Forma
 parseExpr = parseTexto
@@ -127,13 +128,13 @@ parseRectangulo = do
                     lexeme $ char ','
                     e1 <- many1 digit
                     lexeme $ char ')'
-                    return $ (Rectangulo (read e0) (read e1))                  
+                    return $ (Rectangulo (read e0) (read e1))
 
 
 lexeme :: Parser a -> Parser a
 lexeme p = do
             spaces
-            x <- p 
+            x <- p
             spaces
             return x
 
@@ -143,11 +144,12 @@ lexeme p = do
 formToFigure :: Forma -> Figure
 formToFigure (Cuadrado x) =  Rectangle (0,0) 2 2
 formToFigure (Rectangulo x y) = Rectangle (0,0) 5 6
+formToFigure (Texto x) = Text (0,0) x
 
 --Procesa un array de Forma y lo transforma en un array de Figure
 convertForms :: [Forma] -> [Figure]
 convertForms [] = []
-convertForms [x] = [formToFigure x] 
+convertForms [x] = [formToFigure x]
 convertForms (x:xs) = [formToFigure x] ++ convertForms xs
 
 tikzsimple :: [Figure] -> LaTeXT IO ()

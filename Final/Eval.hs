@@ -1,5 +1,6 @@
 module Eval where
 
+import GHC.Float
 import Text.LaTeX
 import Text.LaTeX.Packages.TikZ.Simple
 import AST
@@ -21,16 +22,10 @@ theBody listaFigure = mapM_ (center . tikzpicture . figuretikz) [ figuraFinal( l
 figuraFinal :: [Figure] -> Figure
 figuraFinal a = Figures a
 
-getX :: Punto -> Double
-getX (Punto x y) = x
-
-getY :: Punto -> Double
-getY (Punto x y) = y
-
 formToFigure :: Forma -> Figure
-formToFigure (Cuadrado x) =  Rectangle (0,0) x x
-formToFigure (Rectangulo p x y) =  Rectangle (getX(p),getY(p)) x y
-formToFigure (Circulo x y ) =  Circle (3,3) x
+formToFigure (Cuadrado x) = Rectangle (0,0) (float2Double x) (float2Double x)
+formToFigure (Rectangulo x y) = Rectangle (0,0) (float2Double x) (float2Double y)
+--formToFigure (Circulo x) = Circle (0,0) (float2Double x)
 
 convertForms :: [Forma] -> [Figure]
 convertForms [] = []
