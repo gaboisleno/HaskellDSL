@@ -1,42 +1,43 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Main where
 
 import Data.Char
+import qualified Data.Text as T
+
 import System.Environment
 import System.Process
 import Control.Monad
 
-import Text.Printf --Remove this when it is finished
-
 import Text.Parsec hiding (spaces)
 import Text.Parsec.String
-import Text.ParserCombinators.Parsec.Expr
-import Text.ParserCombinators.Parsec.Language
 import Text.ParserCombinators.Parsec hiding (spaces) --"hiding (spaces)" es porque hice mi propia funcion spaces
 
+import Text.ParserCombinators.Parsec.Expr
+import Text.ParserCombinators.Parsec.Language
+
+import Text.Parsec.Number(floating)
+
+import GHC.Float
+
 import Text.LaTeX
+import Text.LaTeX.Base.Syntax
 import Text.LaTeX.Packages.TikZ.Simple
 
 {-AST-}
 
 data Color = Rojo | Azul | Amarillo | Negro | Blanco deriving (Show)
-data Punto = Punto Double Double deriving (Eq, Show)
+data Punto = Punto Float Float deriving (Eq, Show)
 
-data Forma = Texto String               --Texto ("texto", Punto)
+data Forma = Texto [Char]               --Texto ("texto", Punto)
            | Linea [Punto]              --Linea([Punto, Punto])
-           | Cuadrado Integer           --Cuadrado (Lado, Punto)
-           | Rectangulo Integer Integer --Rectangulo (Lado, Lado, Punto)
-           | Circulo Integer Integer    --Circulo (Radio, Punto)
+           | Cuadrado Float           --Cuadrado (Lado, Punto)
+           | Rectangulo Float Float --Rectangulo (Lado, Lado, Punto)
+           | Circulo Float Float    --Circulo (Radio, Punto)
            | Poligono [Punto]           --Poligono ([Punto, Punto, Punto])
  deriving(Show, Eq)
 
 {-Main-}
-
-getX :: Punto -> Double
-getX (Punto x y) = x
-
-getY :: Punto -> Double
-getY (Punto x y) = y
-
 
 main :: IO ()
 main = 
@@ -86,11 +87,11 @@ parsePunto :: Parser Punto
 parsePunto = do
                 lexeme $ string "Punto"
                 lexeme $ char '('
-                e0 <- many1 digit
+                e0     <- floating
                 lexeme $ char ','
-                e1 <- many1 digit
+                e1     <- floating
                 lexeme $ char ')'
-                return $ (Punto (read e0) (read e1))
+                return $ (Punto e0 e1)
 
 parseLinea :: Parser Forma
 parseLinea = do
@@ -114,20 +115,20 @@ parseCuadrado :: Parser Forma
 parseCuadrado = do
                     lexeme $ string "Cuadrado"
                     lexeme $ char '('
-                    x <- many1 digit
+                    x <- floating
                     lexeme $ char ')'
-                    return $ (Cuadrado (read x))
+                    return $ (Cuadrado x)
 
 
 parseRectangulo :: Parser Forma
 parseRectangulo = do
                     spaces >> string "Rectangulo"
                     lexeme $ char '('
-                    e0 <- many1 digit
+                    e0 <- floating
                     lexeme $ char ','
-                    e1 <- many1 digit
+                    e1 <- floating
                     lexeme $ char ')'
-                    return $ (Rectangulo (read e0) (read e1))                  
+                    return $ (Rectangulo e0 e1)                  
 
 
 lexeme :: Parser a -> Parser a
@@ -141,8 +142,11 @@ lexeme p = do
 
 --Procesa una Forma y la transforma en Figure
 formToFigure :: Forma -> Figure
-formToFigure (Cuadrado x) =  Rectangle (0,0) 2 2
-formToFigure (Rectangulo x y) = Rectangle (0,0) 5 6
+formToFigure (Cuadrado x)     = Rectangle (0,0) (float2Double x) (float2Double x)
+formToFigure (Rectangulo x y) = Rectangle (0,0) (float2Double x) (float2Double y)
+formToFigure (Texto x)        = Text (0,0) (TeXRaw(T.pack x))
+--formToFigure (Linea x)        = Line [ (0,0), (2,2) ]
+--formToFigure (Linea x)        = Ellipse (0,0) 5 2
 
 --Procesa un array de Forma y lo transforma en un array de Figure
 convertForms :: [Forma] -> [Figure]
@@ -159,4 +163,5 @@ thePreamble = do
   usepackage [] tikz
 
 theBody :: [Figure] -> LaTeXT IO ()
-theBody x = mapM_ (center . tikzpicture . figuretikz) x --Lista de las figuras a dibujar
+theBody x =  do 
+    mapM_ (center . tikzpicture . figuretikz) x --Lista de las figuras a dibujar
