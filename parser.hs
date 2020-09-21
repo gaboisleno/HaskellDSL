@@ -141,7 +141,6 @@ lexeme p = do
 
 --Procesa una Forma y la transforma en Figure
 formToFigure :: Forma -> Figure
-<<<<<<< HEAD
 formToFigure (Cuadrado x)     = Rectangle (0,0) (float2Double x) (float2Double x)
 formToFigure (Rectangulo x y) = Rectangle (0,0) (float2Double x) (float2Double y)
 formToFigure (Texto x)        = Text (0,0) (TeXRaw(T.pack x))
