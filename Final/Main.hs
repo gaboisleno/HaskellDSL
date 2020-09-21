@@ -1,29 +1,22 @@
-{- Estos son los unicos imports que estan en el ejemplo de clase
-
 module Main where
 
 import System.Environment (getArgs)
-import Parser (parseComm)
+import System.Process
+
+import Parser(commands)
 
 import Eval
--}
-
-module Main where
-
-import System.Environment (getArgs)
-import Text.Parsec (parse)
-
-import Parser
 
 main :: IO ()
 main = do
            (expr:_) <- getArgs
-           putStrLn (readExpr expr)
+           run expr
+           --putStrLn (commands expr)
 
-readExpr :: String -> String
-readExpr input =
-    case parse parseExpr "" input of
-        Right val  -> "Found value: " ++ show val
-        Left err   -> case parse parsePunto "" input of
-                        Right val  -> "Found value: " ++ show val
-                        Left err   -> "Fail on: " ++ show err
+run :: String -> IO()
+run codigo =
+    do
+    a <- readFile codigo
+    generateTex (commands a)
+    callCommand "latex -output-format=pdf dibujo.tex"
+    putStrLn "Fin"

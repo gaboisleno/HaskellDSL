@@ -40,7 +40,7 @@ data Forma = Texto [Char]               --Texto ("texto", Punto)
 {-Main-}
 
 main :: IO ()
-main = 
+main =
     do
         (file:_) <- getArgs
         code <- readFile file
@@ -69,7 +69,7 @@ commands x = process (filter (not . null ) (split x))
 
 
 readExpr :: String -> Either ParseError Forma
-readExpr input = parse (spaces >> parseExpr) "" input 
+readExpr input = parse (spaces >> parseExpr) "" input
 
 parseExpr :: Parser Forma
 parseExpr = parseTexto
@@ -128,13 +128,12 @@ parseRectangulo = do
                     lexeme $ char ','
                     e1 <- floating
                     lexeme $ char ')'
-                    return $ (Rectangulo e0 e1)                  
-
+                    return $ (Rectangulo e0 e1)              
 
 lexeme :: Parser a -> Parser a
 lexeme p = do
             spaces
-            x <- p 
+            x <- p
             spaces
             return x
 
@@ -142,6 +141,7 @@ lexeme p = do
 
 --Procesa una Forma y la transforma en Figure
 formToFigure :: Forma -> Figure
+<<<<<<< HEAD
 formToFigure (Cuadrado x)     = Rectangle (0,0) (float2Double x) (float2Double x)
 formToFigure (Rectangulo x y) = Rectangle (0,0) (float2Double x) (float2Double y)
 formToFigure (Texto x)        = Text (0,0) (TeXRaw(T.pack x))
@@ -151,7 +151,7 @@ formToFigure (Texto x)        = Text (0,0) (TeXRaw(T.pack x))
 --Procesa un array de Forma y lo transforma en un array de Figure
 convertForms :: [Forma] -> [Figure]
 convertForms [] = []
-convertForms [x] = [formToFigure x] 
+convertForms [x] = [formToFigure x]
 convertForms (x:xs) = [formToFigure x] ++ convertForms xs
 
 tikzsimple :: [Figure] -> LaTeXT IO ()
