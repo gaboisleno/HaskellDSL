@@ -29,12 +29,12 @@ import Text.LaTeX.Packages.TikZ.Simple
 data Color = Rojo | Azul | Amarillo | Negro | Blanco deriving (Show)
 data Punto = Punto Float Float deriving (Eq, Show)
 
-data Forma = Texto [Char]               --Texto ("texto", Punto)
-           | Linea [Punto]              --Linea([Punto, Punto])
-           | Cuadrado Float           --Cuadrado (Lado, Punto)
-           | Rectangulo Float Float --Rectangulo (Lado, Lado, Punto)
-           | Circulo Float Float    --Circulo (Radio, Punto)
-           | Poligono [Punto]           --Poligono ([Punto, Punto, Punto])
+data Forma = Texto Punto [Char]           --Texto ("texto", Punto)
+           | Linea [Punto]                --Linea([Punto, Punto])
+           | Cuadrado Punto Float         --Cuadrado (Lado, Punto)
+           | Rectangulo Punto Float Float --Rectangulo (Lado, Lado, Punto)
+           | Circulo Punto Float          --Circulo (Radio, Punto)
+           | Poligono [Punto]             --Poligono ([Punto, Punto, Punto])
  deriving(Show, Eq)
 
 {-Main-}
@@ -72,10 +72,12 @@ readExpr :: String -> Either ParseError Forma
 readExpr input = parse (spaces >> parseExpr) "" input
 
 parseExpr :: Parser Forma
-parseExpr = parseTexto
+parseExpr =  parseTexto
          <|> parseLinea
          <|> parseCuadrado
+         <|> parseCirculo
          <|> parseRectangulo
+         <|> parsePoligono
 
 regularParse :: Parser a -> String -> Either ParseError a
 regularParse p = parse p ""
@@ -85,50 +87,69 @@ spaces = void $ many $ oneOf(" \n\t")
 
 parsePunto :: Parser Punto
 parsePunto = do
-                lexeme $ string "Punto"
-                lexeme $ char '('
+                lexeme $  string "Punto"
+                lexeme $  char '('
                 e0     <- floating
-                lexeme $ char ','
+                lexeme $  char ','
                 e1     <- floating
-                lexeme $ char ')'
-                return $ (Punto e0 e1)
+                lexeme $  char ')'
+                return $  (Punto e0 e1)
 
 parseLinea :: Parser Forma
 parseLinea = do
-                lexeme $ string "Linea"
-                lexeme $ char '('
-                p1 <- parsePunto
-                lexeme $ char ','
-                p2 <- parsePunto
-                lexeme $ char ')'
-                return $ (Linea [p1, p2])
+                lexeme $  string "Linea"
+                lexeme $  char '('
+                p      <- many1 parsePunto
+                return $  (Linea p)
 
 parseTexto :: Parser Forma
 parseTexto = do
-                lexeme $ string "Texto"
-                lexeme $ char '"'
-                x <- many (noneOf("\""))
-                lexeme $ char '"'
-                return $ Texto x
+                lexeme $  string "Texto"
+                p      <- parsePunto
+                lexeme $  char '"'
+                x      <- many (noneOf("\""))
+                lexeme $  char '"'
+                return $  (Texto p x)
 
 parseCuadrado :: Parser Forma
 parseCuadrado = do
                     lexeme $ string "Cuadrado"
-                    lexeme $ char '('
-                    x <- floating
-                    lexeme $ char ')'
-                    return $ (Cuadrado x)
+                    p      <- parsePunto
+                    lexeme $  char '('
+                    x      <- floating
+                    lexeme $  char ')'
+                    return $  (Cuadrado p x)
 
 
 parseRectangulo :: Parser Forma
 parseRectangulo = do
-                    spaces >> string "Rectangulo"
-                    lexeme $ char '('
-                    e0 <- floating
-                    lexeme $ char ','
-                    e1 <- floating
-                    lexeme $ char ')'
-                    return $ (Rectangulo e0 e1)              
+                    lexeme $  string "Rectangulo"
+                    p      <- parsePunto
+                    lexeme $  char '('
+                    e0     <- floating
+                    lexeme $  char ','
+                    e1     <- floating
+                    lexeme $  char ')'
+                    return $  (Rectangulo p e0 e1)
+
+parsePoligono :: Parser Forma
+parsePoligono = do
+                    lexeme $  string "Poligono"
+                    lexeme $  char '['
+                    p      <- ( `sepBy` char ',' ) parsePunto 
+                    lexeme $  char ']'
+                    return $  (Poligono p)
+
+parseCirculo :: Parser Forma
+parseCirculo = do
+                    lexeme $  string "Circulo"
+                    lexeme $  char '('
+                    p      <- parsePunto
+                    lexeme $  char ','
+                    r      <- floating
+                    lexeme $  char ')'
+                    return $  (Circulo p r)
+
 
 lexeme :: Parser a -> Parser a
 lexeme p = do
@@ -139,13 +160,16 @@ lexeme p = do
 
 {-Eval-}
 
+punto2Point :: Punto -> Point
+punto2Point (Punto a b) = ((float2Double a), (float2Double b))
+
 --Procesa una Forma y la transforma en Figure
 formToFigure :: Forma -> Figure
-formToFigure (Cuadrado x)     = Rectangle (0,0) (float2Double x) (float2Double x)
-formToFigure (Rectangulo x y) = Rectangle (0,0) (float2Double x) (float2Double y)
-formToFigure (Texto x)        = Text (0,0) (TeXRaw(T.pack x))
---formToFigure (Linea x)        = Line [ (0,0), (2,2) ]
---formToFigure (Linea x)        = Ellipse (0,0) 5 2
+formToFigure (Cuadrado p x)     = Rectangle (punto2Point p) (float2Double x) (float2Double x)
+formToFigure (Texto p x)        = Text (punto2Point p) (TeXRaw(T.pack x))
+formToFigure (Rectangulo p x y) = Rectangle (punto2Point p) (float2Double x) (float2Double y)
+formToFigure (Poligono a)       = Polygon (map (punto2Point) a)
+formToFigure (Circulo p r)      = Circle (punto2Point p) (float2Double r)
 
 --Procesa un array de Forma y lo transforma en un array de Figure
 convertForms :: [Forma] -> [Figure]
@@ -163,4 +187,7 @@ thePreamble = do
 
 theBody :: [Figure] -> LaTeXT IO ()
 theBody x =  do 
-    mapM_ (center . tikzpicture . figuretikz) x --Lista de las figuras a dibujar
+    mapM_ (center . tikzpicture . figuretikz) [final(x)] --Lista de las figuras a dibujar
+
+final :: [Figure] -> Figure
+final a = Figures a
