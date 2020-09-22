@@ -98,8 +98,9 @@ parsePunto = do
 parseLinea :: Parser Forma
 parseLinea = do
                 lexeme $  string "Linea"
-                lexeme $  char '('
-                p      <- many1 parsePunto
+                lexeme $  char '['
+                p      <- ( `sepBy` char ',' ) parsePunto
+                lexeme $  char ']'
                 return $  (Linea p)
 
 parseTexto :: Parser Forma
@@ -170,6 +171,7 @@ formToFigure (Texto p x)        = Text (punto2Point p) (TeXRaw(T.pack x))
 formToFigure (Rectangulo p x y) = Rectangle (punto2Point p) (float2Double x) (float2Double y)
 formToFigure (Poligono a)       = Polygon (map (punto2Point) a)
 formToFigure (Circulo p r)      = Circle (punto2Point p) (float2Double r)
+formToFigure (Linea a)          = Line (map (punto2Point) a)
 
 --Procesa un array de Forma y lo transforma en un array de Figure
 convertForms :: [Forma] -> [Figure]
