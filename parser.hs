@@ -36,7 +36,11 @@ data Forma = Texto Punto [Char]           --Texto ("texto", Punto)
            | Circulo Punto Float          --Circulo (Radio, Punto)
            | Poligono [Punto]             --Poligono ([Punto, Punto, Punto])
            | Elipse Punto Float Float     --Elipse
+           | Grafico_Linea [Float]
+           | Grafico_Torta [Float]
+           | Grafico_Barras [Float]
  deriving(Show, Eq)
+
 
 {-Main-}
 
@@ -80,6 +84,7 @@ parseExpr =  parseTexto
          <|> parseRectangulo
          <|> parsePoligono
          <|> parseElipse
+         <|> parseGraficoLinea
 
 regularParse :: Parser a -> String -> Either ParseError a
 regularParse p = parse p ""
@@ -89,7 +94,7 @@ spaces = void $ many $ oneOf(" \n\t")
 
 parsePunto :: Parser Punto
 parsePunto = do
-                lexeme $  string "Punto"
+                lexeme $  try (string "Punto")
                 lexeme $  char '('
                 e0     <- floating
                 lexeme $  char ','
@@ -99,7 +104,7 @@ parsePunto = do
 
 parseLinea :: Parser Forma
 parseLinea = do
-                lexeme $  string "Linea"
+                lexeme $  try (string "Linea")
                 lexeme $  char '['
                 p      <- ( `sepBy` char ',' ) parsePunto
                 lexeme $  char ']'
@@ -107,7 +112,7 @@ parseLinea = do
 
 parseTexto :: Parser Forma
 parseTexto = do
-                lexeme $  string "Texto"
+                lexeme $  try (string "Texto")
                 lexeme $  char '('
                 p      <- parsePunto
                 lexeme $  char ','
@@ -118,18 +123,18 @@ parseTexto = do
 
 parseCuadrado :: Parser Forma
 parseCuadrado = do
-                    lexeme $ try (string "Cuadrado")
+                    lexeme $  try (string "Cuadrado")
                     lexeme $  char '('
                     p      <- parsePunto
-                    lexeme $ char ','
-                    e0      <- floating
+                    lexeme $  char ','
+                    e0     <- floating
                     lexeme $  char ')'
                     return $  (Cuadrado p e0)
 
 
 parseRectangulo :: Parser Forma
 parseRectangulo = do
-                    lexeme $  string "Rectangulo"
+                    lexeme $  try (string "Rectangulo")
                     lexeme $  char '('
                     p      <- parsePunto
                     lexeme $  char ','
@@ -141,7 +146,7 @@ parseRectangulo = do
 
 parsePoligono :: Parser Forma
 parsePoligono = do
-                    lexeme $  string "Poligono"
+                    lexeme $  try (string "Poligono")
                     lexeme $  char '['
                     p      <- ( `sepBy` char ',' ) parsePunto 
                     lexeme $  char ']'
@@ -159,15 +164,23 @@ parseCirculo = do
 
 parseElipse :: Parser Forma
 parseElipse = do
-                lexeme $ try (string "Elipse")
-                lexeme $ char '('
+                lexeme $  try (string "Elipse")
+                lexeme $  char '('
                 p      <- parsePunto
-                lexeme $ char ','
+                lexeme $  char ','
                 e0     <- floating
-                lexeme $ char ','
+                lexeme $  char ','
                 e1     <- floating
-                lexeme $ char ')'
-                return $ (Elipse p e0 e1)
+                lexeme $  char ')'
+                return $  (Elipse p e0 e1)
+
+parseGraficoLinea :: Parser Forma
+parseGraficoLinea = do 
+                        lexeme $  try (string "Grafico_Linea")
+                        lexeme $  char '['
+                        e0     <- ( `sepBy` char ',') (spaces >>  floating)
+                        lexeme $  char ']'
+                        return $  (Grafico_Linea e0)
 
 lexeme :: Parser a -> Parser a
 lexeme p = do
@@ -183,13 +196,14 @@ punto2Point (Punto a b) = ((float2Double a), (float2Double b))
 
 --Procesa una Forma y la transforma en Figure
 formToFigure :: Forma -> Figure
-formToFigure (Cuadrado p x)      = Rectangle (punto2Point p) (float2Double x) (float2Double x)
-formToFigure (Texto p s)          = Text (punto2Point p) (TeXRaw(T.pack s))
+formToFigure (Cuadrado p x)     = Rectangle (punto2Point p) (float2Double x) (float2Double x)
+formToFigure (Texto p s)        = Text (punto2Point p) (TeXRaw(T.pack s))
 formToFigure (Rectangulo p x y) = Rectangle (punto2Point p) (float2Double x) (float2Double y)
-formToFigure (Poligono a)         = Polygon (map (punto2Point) a)
-formToFigure (Circulo p x)       = Circle (punto2Point p) (float2Double x)
-formToFigure (Linea a)            = Line (map (punto2Point) a)
+formToFigure (Poligono a)       = Polygon (map (punto2Point) a)
+formToFigure (Circulo p x)      = Circle (punto2Point p) (float2Double x)
+formToFigure (Linea a)          = Line (map (punto2Point) a)
 formToFigure (Elipse p x y)     = Ellipse (punto2Point p) (float2Double x) (float2Double y)
+formToFigure (Grafico_Linea a)  = final (graficoLinea2Figure a)
 
 --Procesa un array de Forma y lo transforma en un array de Figure
 convertForms :: [Forma] -> [Figure]
@@ -211,3 +225,14 @@ theBody x =  do
 
 final :: [Figure] -> Figure
 final a = Figures a
+
+graficoLinea2Figure :: [Float] -> [Figure]
+graficoLinea2Figure a = [ Line[(0,0), (10,0)], Line[(0,0), (0,10)] ] ++ [ Line  (floats2Puntos (reverseList a))  ]
+
+floats2Puntos :: [Float] -> [Point]
+floats2Puntos [] = []
+floats2Puntos (x:xs) =  [ punto2Point (Punto (fromIntegral(length xs)) x) ] ++ floats2Puntos xs 
+
+reverseList [] = []
+reverseList (x:xs) = reverseList xs ++ [x]
+
