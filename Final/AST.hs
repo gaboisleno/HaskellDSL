@@ -4,10 +4,11 @@ data Color = Rojo | Azul | Amarillo | Negro | Blanco deriving (Show)
 
 data Punto = Punto Float Float deriving (Eq, Show)
 
-data Forma = Texto String               --Texto ("texto", Punto)
-           | Linea [Punto]              --Linea([Punto, Punto])
-           | Cuadrado Float           --Cuadrado (Lado, Punto)
-           | Rectangulo Float Float --Rectangulo (Lado, Lado, Punto)
-           | Circulo Float     --Circulo (Radio, Punto)
-           | Poligono [Punto]           --Poligono ([Punto, Punto, Punto])
+data Forma = Texto Punto [Char]           --Texto ("texto", Punto)
+           | Linea [Punto]                --Linea([Punto, Punto])
+           | Cuadrado Punto Float         --Cuadrado (Lado, Punto)
+           | Rectangulo Punto Float Float --Rectangulo (Lado, Lado, Punto)
+           | Circulo Punto Float          --Circulo (Radio, Punto)
+           | Poligono [Punto]             --Poligono ([Punto, Punto, Punto])
+           | Elipse Punto Float Float     --Elipse
  deriving(Show, Eq)
