@@ -43,6 +43,7 @@ parseExpr =  parseTexto
          <|> parseRectangulo
          <|> parsePoligono
          <|> parseElipse
+         <|> parseGraficoTorta
 
 regularParse :: Parser a -> String -> Either ParseError a
 regularParse p = parse p ""
@@ -131,6 +132,27 @@ parseElipse = do
                 e1     <- floating
                 lexeme $ char ')'
                 return $ (Elipse p e0 e1)
+
+parseDato :: Parser Dato
+parseDato = do
+                  lexeme $  string "Dato"
+                  lexeme $  char '('
+                  e0     <- floating
+                  lexeme $  char ','
+                  lexeme $  char '"'
+                  e1     <- many (noneOf("\""))
+                  lexeme $  char '"'
+                  lexeme $  char ')'
+                  return $  (Dato e0 e1)
+
+parseGraficoTorta :: Parser Forma
+parseGraficoTorta = do
+                        lexeme $ try (string "GraficoTorta")
+                        lexeme $  char '['
+                        p      <- ( `sepBy` char ',' ) parseDato
+                        lexeme $  char ']'
+                        return $ (GraficoTorta p)
+
 
 lexeme :: Parser a -> Parser a
 lexeme p = do

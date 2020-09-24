@@ -4,6 +4,8 @@ data Color = Rojo | Azul | Amarillo | Negro | Blanco deriving (Show)
 
 data Punto = Punto Float Float deriving (Eq, Show)
 
+data Dato = Dato Float [Char] deriving (Eq, Show)
+
 data Forma = Texto Punto [Char]           --Texto ("texto", Punto)
            | Linea [Punto]                --Linea([Punto, Punto])
            | Cuadrado Punto Float         --Cuadrado (Lado, Punto)
@@ -11,4 +13,5 @@ data Forma = Texto Punto [Char]           --Texto ("texto", Punto)
            | Circulo Punto Float          --Circulo (Radio, Punto)
            | Poligono [Punto]             --Poligono ([Punto, Punto, Punto])
            | Elipse Punto Float Float     --Elipse
+           | GraficoTorta [Dato]
  deriving(Show, Eq)

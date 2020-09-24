@@ -14,13 +14,18 @@
 ```sh
 $ ghc -o main parser.hs
 ```
-
-2) Ejecutar:
+2) Crear archivo:
 
 ```sh
-$ ./main "Linea(Punto(2,2), Punto(4,4)); Cuadrado(2)"
-[Linea [Punto 2 2,Punto 4 4],Cuadrado 2]
+Texto (Punto(2.5, 1.0), "Hola Hatex");
+Rectangulo(Punto(0.0, 0.0), 2.0, 5.0);
+Circulo(Punto(0.0, 0.0), 6.0)
+```
 
+3) Ejecutar:
+
+```sh
+$ ./main archivo
 ```
 
 ### Docs + Instalation
