@@ -36,7 +36,7 @@ data Forma = Texto Punto [Char]           --Texto ("texto", Punto)
            | Circulo Punto Float          --Circulo (Radio, Punto)
            | Poligono [Punto]             --Poligono ([Punto, Punto, Punto])
            | Elipse Punto Float Float     --Elipse
-           | Grafico_Linea [Float]
+           | Grafico_Linea [Float] String
            | Grafico_Torta [Float]
            | Grafico_Barras [Float]
  deriving(Show, Eq)
@@ -51,6 +51,9 @@ main =
         code <- readFile file
         execLaTeXT (tikzsimple (convertForms(commands code))) >>= renderFile (file++".tex")
         callCommand ("pdflatex "++file++".tex")
+        callCommand ("rm "++file++".aux")
+        callCommand ("rm "++file++".log")
+        callCommand ("rm "++file++".tex")
         putStrLn "Done."
 
 {-Parser-}
@@ -177,10 +180,16 @@ parseElipse = do
 parseGraficoLinea :: Parser Forma
 parseGraficoLinea = do 
                         lexeme $  try (string "Grafico_Linea")
+                        lexeme $  char '('
                         lexeme $  char '['
                         e0     <- ( `sepBy` char ',') (spaces >>  floating)
                         lexeme $  char ']'
-                        return $  (Grafico_Linea e0)
+                        lexeme $  char ','
+                        lexeme $  char '"'
+                        e1     <- many (noneOf("\""))
+                        lexeme $  char '"'  
+                        lexeme $  char ')'
+                        return $  (Grafico_Linea e0 e1)
 
 lexeme :: Parser a -> Parser a
 lexeme p = do
@@ -203,7 +212,7 @@ formToFigure (Poligono a)       = Polygon (map (punto2Point) a)
 formToFigure (Circulo p x)      = Circle (punto2Point p) (float2Double x)
 formToFigure (Linea a)          = Line (map (punto2Point) a)
 formToFigure (Elipse p x y)     = Ellipse (punto2Point p) (float2Double x) (float2Double y)
-formToFigure (Grafico_Linea a)  = final (graficoLinea2Figure a)
+formToFigure (Grafico_Linea a s)  = final (graficoLinea2Figure a s)
 
 --Procesa un array de Forma y lo transforma en un array de Figure
 convertForms :: [Forma] -> [Figure]
@@ -226,9 +235,26 @@ theBody x =  do
 final :: [Figure] -> Figure
 final a = Figures a
 
-graficoLinea2Figure :: [Float] -> [Figure]
-graficoLinea2Figure a = [ Line[(0,0), (10,0)], Line[(0,0), (0,10)] ] ++ [ Line  (floats2Puntos (reverseList a))  ]
+{-Grafico de lineas-}
 
+graficoLinea2Figure :: [Float] -> String -> [Figure]
+graficoLinea2Figure a s = 
+    ( graficoLineaBase ++ [ Line(floats2Puntos (reverseList a)) ]) ++ [Text (10,5) (TeXRaw(T.pack s))]
+
+graficoLineaBase :: [Figure]
+graficoLineaBase =  [ Line[(0,0), (10,0)], Line[(0,0), (0,10)] ] ++ (generateRecodsY 10) ++ (generateRecodsX 10) 
+
+
+generateRecodsY :: Integer -> [Figure]
+generateRecodsY n
+    | (n == 0) = []
+    | (n > 0) = [ Line [(0, (fromIntegral n)), (0.3, (fromIntegral n))] ] ++ generateRecodsY (n-1)
+
+generateRecodsX :: Integer -> [Figure]
+generateRecodsX n
+    | (n == 0) = []
+    | (n > 0) = [ Line [((fromIntegral n), 0), ((fromIntegral n), 0.3)] ] ++ generateRecodsX (n-1)
+    
 floats2Puntos :: [Float] -> [Point]
 floats2Puntos [] = []
 floats2Puntos (x:xs) =  [ punto2Point (Punto (fromIntegral(length xs)) x) ] ++ floats2Puntos xs 
