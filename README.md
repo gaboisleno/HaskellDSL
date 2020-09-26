@@ -13,7 +13,8 @@ $ ghc -o main Main.hs
 ```sh
 Texto (Punto(2.5, 1.0), "Hola Hatex");
 Rectangulo(Punto(0.0, 0.0), 2.0, 5.0);
-Circulo(Punto(0.0, 0.0), 6.0)
+Circulo(Punto(0.0, 0.0), 6.0);
+Pintado "Magenta" Cuadrado(Punto(0.0, 0.0), 2.0)
 ```
 
 3) Ejecutar:
