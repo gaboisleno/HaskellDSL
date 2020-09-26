@@ -33,10 +33,10 @@ formToFigure (Linea a)            = Line (map (punto2Point) a)
 formToFigure (Elipse p x y)       = Ellipse (punto2Point p) (float2Double x) (float2Double y)
 formToFigure (GraficoTorta d)     = figuresToFigure(generarGraficoTorta d)
 formToFigure (GraficoLinea a s)   = figuresToFigure(graficoLinea2Figure a s)
+formToFigure (Pintado c f)        = Colored (BasicColor Red) $ (formToFigure f)
 
 convertForms :: [Forma] -> [Figure]
 convertForms [] = []
---convertForms [x] = [formToFigure x]
 convertForms (x:xs) = [formToFigure x] ++ convertForms xs
 
 punto2Point :: Punto -> Point
@@ -64,7 +64,6 @@ generarGraficoTorta d = generarLineasGraficoTorta d 100 ++ [ LineWidth (Pt 2) $ 
 --Funcion recursiva para para generar las lineas del grafico de torta junto con el texto de cada Dato
 generarLineasGraficoTorta :: [Dato] -> Float -> [Figure]
 generarLineasGraficoTorta [] _ = []
---generarLineasGraficoTorta [x] porcentaje = [datoToLineaGraficoTorta x porcentaje]
 generarLineasGraficoTorta (x:xs) porcentaje = [datoToLineaGraficoTorta x porcentaje] ++ generarLineasGraficoTorta xs (porcentaje - getFloatFromData(x))
 
 --Convierto un Dato en una linea y un texto ubicados en la posicion correcta en relacion al porcentaje restante del circulo

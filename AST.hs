@@ -1,6 +1,6 @@
 module AST where
 
-data Color = Rojo | Azul | Amarillo | Negro | Blanco deriving (Show)
+data Pintura = Rojo | Azul | Amarillo | Negro | Blanco deriving (Eq, Show)
 
 data Punto = Punto Float Float deriving (Eq, Show)
 
@@ -15,4 +15,5 @@ data Forma = Texto Punto [Char]           --Texto ("texto", Punto)
            | Elipse Punto Float Float     --Elipse
            | GraficoTorta [Dato]
            | GraficoLinea [Float] String
+           | Pintado Pintura Forma
  deriving(Show, Eq)
