@@ -1,19 +1,13 @@
 # DSL Programacion Profesional
 
-### Uso sin compilar:
-
-```sh
-*Main> regularParse parseTexto "\"Hola mundo\""
-*Main> regularParse parsePunto "1 2"
-*Main> regularParse parseLinea  "2 1 2 3"
-```
-### Uso compilado: 
+### Modo de uso
 
 1) Compilar:	
 
 ```sh
-$ ghc -o main parser.hs
+$ ghc -o main Main.hs
 ```
+
 2) Crear archivo:
 
 ```sh

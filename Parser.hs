@@ -172,7 +172,28 @@ parseGraficoLinea = do
 parsePintado :: Parser Forma
 parsePintado = do
                   lexeme $  try (string "Pintado")
-                  return $  (Pintado Rojo (Linea[Punto 0.0 0.0 , Punto 2.0 2.0]))
+                  e0     <- parsePintura
+                  e1     <- parseExpr
+                  return $  (Pintado e0 e1)
+
+parsePintura :: Parser Pintura
+parsePintura = do 
+                 lexeme $ char '"' 
+                 e0     <- many (noneOf "\"")
+                 lexeme $ char '"'
+                 return $  ( foo e0 )
+
+foo :: String -> Pintura
+foo x 
+    | x == "Rojo"     = Rojo
+    | x == "Amarillo" = Amarillo
+    | x == "Azul"     = Azul
+    | x == "Cian"     = Cian
+    | x == "Magenta"  = Fucsia
+    | x == "Verde"    = Verde
+    | x == "Blanco"   = Blanco
+    | otherwise       = Negro
+
 
 lexeme :: Parser a -> Parser a
 lexeme p = do

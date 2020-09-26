@@ -19,4 +19,5 @@ main =
         callCommand ("rm "++file++".aux")
         callCommand ("rm "++file++".log")
         callCommand ("rm "++file++".tex")
+        callCommand ("rm *.o *.hi")
         putStrLn "Done."

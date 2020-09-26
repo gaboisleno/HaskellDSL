@@ -33,7 +33,7 @@ formToFigure (Linea a)            = Line (map (punto2Point) a)
 formToFigure (Elipse p x y)       = Ellipse (punto2Point p) (float2Double x) (float2Double y)
 formToFigure (GraficoTorta d)     = figuresToFigure(generarGraficoTorta d)
 formToFigure (GraficoLinea a s)   = figuresToFigure(graficoLinea2Figure a s)
-formToFigure (Pintado c f)        = Colored (BasicColor Red) $ (formToFigure f)
+formToFigure (Pintado c f)        = Colored (BasicColor ( pintura2Color c ) ) $ (formToFigure f)
 
 convertForms :: [Forma] -> [Figure]
 convertForms [] = []
@@ -41,6 +41,17 @@ convertForms (x:xs) = [formToFigure x] ++ convertForms xs
 
 punto2Point :: Punto -> Point
 punto2Point (Punto a b) = ((float2Double a), (float2Double b))
+
+pintura2Color :: Pintura -> Color
+pintura2Color c 
+            | c == Rojo     = Red
+            | c == Amarillo = Yellow
+            | c == Azul     = Blue
+            | c == Verde    = Green
+            | c == Cian     = Cyan
+            | c == Fucsia   = Magenta
+            | c == Blanco   = White
+            | otherwise     = Black
 
 {----------Funciones para grafico de torta----------}
 --Obtengo el Float de un Dato

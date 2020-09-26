@@ -1,6 +1,6 @@
 module AST where
 
-data Pintura = Rojo | Azul | Amarillo | Negro | Blanco deriving (Eq, Show)
+data Pintura = Rojo | Azul | Amarillo | Verde | Cian | Fucsia | Negro | Blanco deriving (Eq, Show)
 
 data Punto = Punto Float Float deriving (Eq, Show)
 
