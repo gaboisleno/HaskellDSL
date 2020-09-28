@@ -90,9 +90,11 @@ graficoLinea2Figure :: [Float] -> [Figure]
 graficoLinea2Figure a =
     ( graficoLineaBase ++ [ Line(floats2Puntos (reverseList a)) ]) -- ++ [Text (10,5) (TeXRaw(T.pack s))]
 
+--Genera las lineas en 90 grados para los ejes y las marcas con los intervalos 
 graficoLineaBase :: [Figure]
 graficoLineaBase =  [ Line[(0,0), (10,0)], Line[(0,0), (0,10)] ] ++ (generateRecods 10)
 
+--Genera las marcas de los intervalos en los ejes X Y
 generateRecods :: Integer -> [Figure]
 generateRecods n
     | (n == 0) = []
@@ -100,9 +102,11 @@ generateRecods n
                     [ Line [((fromIntegral n), 0), ((fromIntegral n), 0.3)] ] ++
                             generateRecods (n-1)
 
+--Convierte los valores ingresados a puntos para usar en el grafico
 floats2Puntos :: [Float] -> [Point]
 floats2Puntos [] = []
 floats2Puntos (x:xs) =  [ punto2Point (Punto (fromIntegral(length xs)) x) ] ++ floats2Puntos xs
 
+--Invierte una lista
 reverseList [] = []
 reverseList (x:xs) = reverseList xs ++ [x]
