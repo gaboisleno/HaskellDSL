@@ -14,6 +14,6 @@ data Forma = Texto Punto [Char]           --Texto ("texto", Punto)
            | Poligono [Punto]             --Poligono ([Punto, Punto, Punto])
            | Elipse Punto Float Float     --Elipse
            | GraficoTorta [Dato]
-           | GraficoLinea [Float] String
+           | GraficoLinea [Float]
            | Pintado Pintura Forma
  deriving(Show, Eq)

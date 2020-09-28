@@ -32,5 +32,6 @@ $ ./main archivo
 | Latex | https://www.latex-project.org |
 | Parsec | https://hackage.haskell.org/package/parsec |
 | Tikz | https://www.overleaf.com/learn/latex/TikZ_package |
+| TikzSimlpe | http://github.com/Daniel-Diaz/HaTeX |
 | Intro to parsing | http://jakewheat.github.io/intro_to_parsing |
 | Scheme in 48hs | https://en.wikibooks.org/wiki/Write_Yourself_a_Scheme_in_48_Hours |

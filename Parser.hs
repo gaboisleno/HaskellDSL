@@ -80,6 +80,7 @@ parseTexto = do
                 lexeme $  char '"'
                 e0     <- many (noneOf("\""))
                 lexeme $  char '"'
+                lexeme $  char ')'
                 return $  (Texto p e0)
 
 parseCuadrado :: Parser Forma
@@ -162,12 +163,8 @@ parseGraficoLinea = do
                         lexeme $  char '['
                         e0     <- ( `sepBy` char ',') (spaces >>  floating)
                         lexeme $  char ']'
-                        lexeme $  char ','
-                        lexeme $  char '"'
-                        e1     <- many (noneOf("\""))
-                        lexeme $  char '"'
                         lexeme $  char ')'
-                        return $  (GraficoLinea e0 e1)
+                        return $  (GraficoLinea e0)
 
 parsePintado :: Parser Forma
 parsePintado = do

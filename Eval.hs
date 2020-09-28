@@ -32,7 +32,7 @@ formToFigure (Circulo p x)        = Circle (punto2Point p) (float2Double x)
 formToFigure (Linea a)            = Line (map (punto2Point) a)
 formToFigure (Elipse p x y)       = Ellipse (punto2Point p) (float2Double x) (float2Double y)
 formToFigure (GraficoTorta d)     = figuresToFigure(generarGraficoTorta d)
-formToFigure (GraficoLinea a s)   = figuresToFigure(graficoLinea2Figure a s)
+formToFigure (GraficoLinea a)     = figuresToFigure(graficoLinea2Figure a)
 formToFigure (Pintado c f)        = Colored (BasicColor ( pintura2Color c ) ) $ (formToFigure f)
 
 convertForms :: [Forma] -> [Figure]
@@ -86,22 +86,19 @@ datoToLineaGraficoTorta d porcentaje = if porcentaje == 100
 
 {----------Funciones para grafico de linea----------}
 
-graficoLinea2Figure :: [Float] -> String -> [Figure]
-graficoLinea2Figure a s =
-    ( graficoLineaBase ++ [ Line(floats2Puntos (reverseList a)) ]) ++ [Text (10,5) (TeXRaw(T.pack s))]
+graficoLinea2Figure :: [Float] -> [Figure]
+graficoLinea2Figure a =
+    ( graficoLineaBase ++ [ Line(floats2Puntos (reverseList a)) ]) -- ++ [Text (10,5) (TeXRaw(T.pack s))]
 
 graficoLineaBase :: [Figure]
-graficoLineaBase =  [ Line[(0,0), (10,0)], Line[(0,0), (0,10)] ] ++ (generateRecodsY 10) ++ (generateRecodsX 10)
+graficoLineaBase =  [ Line[(0,0), (10,0)], Line[(0,0), (0,10)] ] ++ (generateRecods 10)
 
-generateRecodsY :: Integer -> [Figure]
-generateRecodsY n
+generateRecods :: Integer -> [Figure]
+generateRecods n
     | (n == 0) = []
-    | (n > 0) = [ Line [(0, (fromIntegral n)), (0.3, (fromIntegral n))] ] ++ generateRecodsY (n-1)
-
-generateRecodsX :: Integer -> [Figure]
-generateRecodsX n
-    | (n == 0) = []
-    | (n > 0) = [ Line [((fromIntegral n), 0), ((fromIntegral n), 0.3)] ] ++ generateRecodsX (n-1)
+    | (n > 0) = [ Line [(0, (fromIntegral n)), (0.3, (fromIntegral n))] ] ++
+                    [ Line [((fromIntegral n), 0), ((fromIntegral n), 0.3)] ] ++
+                            generateRecods (n-1)
 
 floats2Puntos :: [Float] -> [Point]
 floats2Puntos [] = []
