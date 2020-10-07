@@ -44,7 +44,6 @@ parseExpr =  parseTexto
          <|> parsePoligono
          <|> parseElipse
          <|> parseGraficoTorta
-         <|> parseGraficoLinea
          <|> parsePintado
 
 regularParse :: Parser a -> String -> Either ParseError a
@@ -138,33 +137,19 @@ parseElipse = do
 
 parseDato :: Parser Dato
 parseDato = do
-                  lexeme $  try (string "Dato")
-                  lexeme $  char '('
-                  e0     <- floating
-                  lexeme $  char ','
-                  lexeme $  char '"'
-                  e1     <- many (noneOf("\""))
-                  lexeme $  char '"'
-                  lexeme $  char ')'
-                  return $  (Dato e0 e1)
+               lexeme $  char '"'
+               e1     <- many (noneOf("\""))
+               lexeme $  char '"'
+               spaces
+               e0     <- floating
+               return $  (Dato e0 e1)
 
 parseGraficoTorta :: Parser Forma
 parseGraficoTorta = do
                         lexeme $ try (string "GraficoTorta")
-                        lexeme $  char '['
-                        p      <- ( `sepBy` char ',' ) parseDato
-                        lexeme $  char ']'
+                        p      <- ( `sepBy` char ' ')  parseDato
                         return $ (GraficoTorta p)
 
-parseGraficoLinea :: Parser Forma
-parseGraficoLinea = do
-                        lexeme $  try (string "GraficoLinea")
-                        lexeme $  char '('
-                        lexeme $  char '['
-                        e0     <- ( `sepBy` char ',') (spaces >>  floating)
-                        lexeme $  char ']'
-                        lexeme $  char ')'
-                        return $  (GraficoLinea e0)
 
 parsePintado :: Parser Forma
 parsePintado = do
