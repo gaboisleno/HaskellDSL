@@ -52,90 +52,81 @@ regularParse p = parse p ""
 spaces :: Parser ()
 spaces = void $ many $ oneOf(" \n\t")
 
-parsePunto :: Parser Punto
+parsePunto :: Parser Punto --(x y)
 parsePunto = do
-                lexeme $  try (string "Punto")
-                lexeme $  char '('
+                lexeme $ char '('
+                spaces
                 e0     <- floating
-                lexeme $  char ','
+                spaces
                 e1     <- floating
-                lexeme $  char ')'
+                spaces
+                lexeme $ char ')'
                 return $  (Punto e0 e1)
 
-parseLinea :: Parser Forma
+parseLinea :: Parser Forma --Linea (x y) (x y) ...
 parseLinea = do
                 lexeme $  try (string "Linea")
-                lexeme $  char '['
-                p      <- ( `sepBy` char ',' ) parsePunto
-                lexeme $  char ']'
+                spaces
+                p      <- many1 (try  parsePunto)
                 return $  (Linea p)
 
-parseTexto :: Parser Forma
+parseTexto :: Parser Forma --Texto (x y) "Hola"
 parseTexto = do
                 lexeme $  try (string "Texto")
-                lexeme $  char '('
+                spaces
                 p      <- parsePunto
-                lexeme $  char ','
                 lexeme $  char '"'
                 e0     <- many (noneOf("\""))
                 lexeme $  char '"'
-                lexeme $  char ')'
                 return $  (Texto p e0)
 
-parseCuadrado :: Parser Forma
+parseCuadrado :: Parser Forma --Cuadrado (x y) j
 parseCuadrado = do
                     lexeme $ try (string "Cuadrado")
-                    lexeme $  char '('
+                    spaces
                     p      <- parsePunto
-                    lexeme $ char ','
-                    e0      <- floating
-                    lexeme $  char ')'
+                    e0     <- floating
                     return $  (Cuadrado p e0)
 
-
-parseRectangulo :: Parser Forma
+parseRectangulo :: Parser Forma --Rectangulo (x y) j k
 parseRectangulo = do
                     lexeme $  try (string "Rectangulo")
-                    lexeme $  char '('
+                    spaces
                     p      <- parsePunto
-                    lexeme $  char ','
+                    spaces
                     e0     <- floating
-                    lexeme $  char ','
+                    spaces
                     e1     <- floating
-                    lexeme $  char ')'
                     return $  (Rectangulo p e0 e1)
 
-parsePoligono :: Parser Forma
+parsePoligono :: Parser Forma --Poligono (x y) (x y) ...
 parsePoligono = do
                     lexeme $  try (string "Poligono")
-                    lexeme $  char '['
-                    p      <- ( `sepBy` char ',' ) parsePunto
-                    lexeme $  char ']'
+                    spaces
+                    p      <- many1 (try parsePunto)
                     return $  (Poligono p)
 
-parseCirculo :: Parser Forma
+parseCirculo :: Parser Forma --Circulo (x y) j
 parseCirculo = do
                     lexeme $  try (string "Circulo")
-                    lexeme $  char '('
+                    spaces
                     p      <- parsePunto
-                    lexeme $  char ','
-                    e0      <- floating
-                    lexeme $  char ')'
+                    spaces
+                    e0     <- floating
                     return $  (Circulo p e0)
 
-parseElipse :: Parser Forma
+parseElipse :: Parser Forma --Elipse (x y) j k
 parseElipse = do
                 lexeme $ try (string "Elipse")
-                lexeme $ char '('
+                spaces
                 p      <- parsePunto
-                lexeme $ char ','
+                spaces
                 e0     <- floating
-                lexeme $ char ','
+                spaces
                 e1     <- floating
-                lexeme $ char ')'
                 return $ (Elipse p e0 e1)
 
-parseDato :: Parser Dato
+parseDato :: Parser Dato -- "Algo" x
 parseDato = do
                lexeme $  char '"'
                e1     <- many (noneOf("\""))
@@ -144,11 +135,24 @@ parseDato = do
                e0     <- floating
                return $  (Dato e0 e1)
 
-parseGraficoTorta :: Parser Forma
+parseGraficoTorta :: Parser Forma --GraficoTorta "Algo" x "Otro" y ...
 parseGraficoTorta = do
-                        lexeme $ try (string "GraficoTorta")
-                        p      <- ( `sepBy` char ' ')  parseDato
-                        return $ (GraficoTorta p)
+                        lexeme $  try (string "GraficoTorta")
+                        spaces
+                        p      <- many1 (try parseDato)
+                        c      <- try parseColor <|> defaultColor
+                        return $  (GraficoTorta p c)
+
+
+defaultColor :: Parser Pintura
+defaultColor = return Negro
+
+parseColor :: Parser Pintura
+parseColor = do
+                lexeme $  try (string "-c")
+                spaces
+                c      <- parsePintura
+                return $ (c)
 
 
 parsePintado :: Parser Forma

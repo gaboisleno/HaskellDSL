@@ -13,7 +13,7 @@ data Forma = Texto Punto [Char]           --Texto ("texto", Punto)
            | Circulo Punto Float          --Circulo (Radio, Punto)
            | Poligono [Punto]             --Poligono ([Punto, Punto, Punto])
            | Elipse Punto Float Float     --Elipse
-           | GraficoTorta [Dato]
+           | GraficoTorta [Dato] Pintura
            | Pintado Pintura Forma
  deriving(Show, Eq)
  
