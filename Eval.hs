@@ -20,6 +20,12 @@ thePreamble = do
 theBody :: [Figure] -> LaTeXT IO ()
 theBody listaFigure = mapM_ (center . tikzpicture . figuretikz) [figuresToFigure(listaFigure)]
 
+getNombreArchivo :: Archivo -> [Char]
+getNombreArchivo (Archivo n f) = n
+
+archivoToFigures :: Archivo -> [Figure]
+archivoToFigures (Archivo n f) = map formToFigure f
+
 figuresToFigure :: [Figure] -> Figure
 figuresToFigure a = Figures a
 

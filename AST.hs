@@ -1,5 +1,7 @@
 module AST where
 
+data Archivo = Archivo [Char] [Forma] deriving (Eq, Show)
+
 data Pintura = Rojo | Azul | Amarillo | Verde | Cian | Fucsia | Negro | Blanco deriving (Eq, Show)
 
 data Punto = Punto Float Float deriving (Eq, Show)
@@ -16,4 +18,4 @@ data Forma = Texto Punto [Char] Pintura
            | GraficoTorta [Dato] Pintura
  deriving(Show, Eq)
  
---data Archivo = [Char] [Forma] deriving (Eq, Show)
+

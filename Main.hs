@@ -9,15 +9,22 @@ import Parser(commands)
 
 import Eval
 
-main :: IO ()
+
+--generarPDF :: [Archivo] -> IO()
+generarPDF a = 
+            do
+                execLaTeXT (tikzsimple (archivoToFigures(a))) >>= renderFile (getNombreArchivo(a)++".tex")
+                callCommand ("pdflatex "++getNombreArchivo(a)++".tex")
+                --callCommand ("rm "++getNombreArchivo(a)++".aux")
+                --callCommand ("rm "++getNombreArchivo(a)++".log")
+                --callCommand ("rm "++getNombreArchivo(a)++".tex")
+
+main :: IO()
 main =
     do
         (file:_) <- getArgs
         code <- readFile file
-        execLaTeXT (tikzsimple (convertForms(commands code))) >>= renderFile (file++".tex")
-        callCommand ("pdflatex "++file++".tex")
-        callCommand ("rm "++file++".aux")
-        callCommand ("rm "++file++".log")
-        callCommand ("rm "++file++".tex")
+        generarPDF (head(commands code))
         callCommand ("rm *.o *.hi")
         putStrLn "Done."
+        

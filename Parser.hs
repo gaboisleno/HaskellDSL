@@ -14,6 +14,9 @@ import Text.ParserCombinators.Parsec hiding (spaces, try)
 
 import AST
 
+commands :: String -> [Archivo]
+commands x = process (filter (not . null ) (split x))
+
 split :: String -> [String]
 split [] = [""]
 split (c:cs) | c == ';' = "" : rest
@@ -21,29 +24,36 @@ split (c:cs) | c == ';' = "" : rest
     where rest = split cs
 
 
-process :: [String] -> [Forma]
+process :: [String] -> [Archivo]
 process [] = []
 process (x:xs) = case readExpr x of
                 Left err -> fail ("Error: " ++ show err) putStrLn
-                Right forma -> [forma] ++ process xs
+                Right archivo -> [archivo] ++ process xs
 
 
-commands :: String -> [Forma]
-commands x = process (filter (not . null ) (split x))
-
-
-readExpr :: String -> Either ParseError Forma
+readExpr :: String -> Either ParseError Archivo
 readExpr input = parse (spaces >> parseExpr) "" input
 
-parseExpr :: Parser Forma
-parseExpr =  parseTexto
-         <|> parseLinea
-         <|> parseCuadrado
-         <|> parseCirculo
-         <|> parseRectangulo
-         <|> parsePoligono
-         <|> parseElipse
-         <|> parseGraficoTorta
+parseExpr :: Parser Archivo
+parseExpr =  parseArchivo    
+         
+parseArchivo :: Parser Archivo 
+parseArchivo = do
+                spaces
+                e0     <- many (noneOf(" ="))
+                lexeme $  char '='
+                f      <- many1 parseFigura
+                return $  (Archivo e0 f)
+         
+parseFigura :: Parser Forma
+parseFigura = parseTexto
+           <|> parseLinea
+           <|> parseCuadrado
+           <|> parseCirculo
+           <|> parseRectangulo
+           <|> parsePoligono
+           <|> parseElipse
+           <|> parseGraficoTorta
 
 regularParse :: Parser a -> String -> Either ParseError a
 regularParse p = parse p ""
@@ -156,7 +166,7 @@ parseGraficoTorta = do
                         lexeme $  try (string "GraficoTorta")
                         spaces
                         p      <- many1 (try parseDato)
-                        c      <- try parseColor <|> defaultColor
+                        c      <- parseColor <|> defaultColor
                         return $  (GraficoTorta p c)
 {-------------------------------------------------}
 
@@ -168,7 +178,7 @@ defaultColor = return Negro
 
 parseColor :: Parser Pintura
 parseColor = do
-                lexeme $  try (string "-c")
+                lexeme $ try (string "-c")
                 spaces
                 c      <- parsePintura
                 return $ (c)
