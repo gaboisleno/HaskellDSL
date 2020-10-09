@@ -42,6 +42,7 @@ parseArchivo = do
                 spaces
                 e0     <- many (noneOf(" ="))
                 lexeme $  char '='
+                --f      <- ( `sepBy` string "++" ) parseFigura
                 f      <- many1 parseFigura
                 return $  (Archivo e0 f)
          
