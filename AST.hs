@@ -6,15 +6,14 @@ data Punto = Punto Float Float deriving (Eq, Show)
 
 data Dato = Dato Float [Char] deriving (Eq, Show)
 
-data Forma = Texto Punto [Char]           --Texto ("texto", Punto)
-           | Linea [Punto]                --Linea([Punto, Punto])
-           | Cuadrado Punto Float         --Cuadrado (Lado, Punto)
-           | Rectangulo Punto Float Float --Rectangulo (Lado, Lado, Punto)
-           | Circulo Punto Float          --Circulo (Radio, Punto)
-           | Poligono [Punto]             --Poligono ([Punto, Punto, Punto])
-           | Elipse Punto Float Float     --Elipse
+data Forma = Texto Punto [Char] Pintura           
+           | Linea [Punto] Pintura                
+           | Cuadrado Punto Float Pintura         
+           | Rectangulo Punto Float Float Pintura 
+           | Circulo Punto Float Pintura          
+           | Poligono [Punto] Pintura             
+           | Elipse Punto Float Float Pintura     
            | GraficoTorta [Dato] Pintura
-           | Pintado Pintura Forma
  deriving(Show, Eq)
  
 --data Archivo = [Char] [Forma] deriving (Eq, Show)

@@ -24,15 +24,14 @@ figuresToFigure :: [Figure] -> Figure
 figuresToFigure a = Figures a
 
 formToFigure :: Forma -> Figure
-formToFigure (Cuadrado p x)       = Rectangle (punto2Point p) (float2Double x) (float2Double x)
-formToFigure (Texto p s)          = Text (punto2Point p) (TeXRaw(T.pack s))
-formToFigure (Rectangulo p x y)   = Rectangle (punto2Point p) (float2Double x) (float2Double y)
-formToFigure (Poligono a)         = Polygon (map (punto2Point) a)
-formToFigure (Circulo p x)        = Circle (punto2Point p) (float2Double x)
-formToFigure (Linea a)            = Line (map (punto2Point) a)
-formToFigure (Elipse p x y)       = Ellipse (punto2Point p) (float2Double x) (float2Double y)
-formToFigure (GraficoTorta d)     = figuresToFigure(generarGraficoTorta d)
-formToFigure (Pintado c f)        = Colored (BasicColor ( pintura2Color c ) ) $ (formToFigure f)
+formToFigure (Cuadrado p x c)      = Colored (BasicColor (pintura2Color c) ) $ Rectangle (punto2Point p) (float2Double x) (float2Double x)
+formToFigure (Texto p s c)         = Colored (BasicColor (pintura2Color c) ) $ Text (punto2Point p) (TeXRaw(T.pack s))
+formToFigure (Rectangulo p x y c)  = Colored (BasicColor (pintura2Color c) ) $ Rectangle (punto2Point p) (float2Double x) (float2Double y)
+formToFigure (Poligono a c)        = Colored (BasicColor (pintura2Color c) ) $ Polygon (map (punto2Point) a)
+formToFigure (Circulo p x c)       = Colored (BasicColor (pintura2Color c) ) $ Circle (punto2Point p) (float2Double x)
+formToFigure (Linea a c)           = Colored (BasicColor (pintura2Color c) ) $ Line (map (punto2Point) a)
+formToFigure (Elipse p x y c)      = Colored (BasicColor (pintura2Color c) ) $ Ellipse (punto2Point p) (float2Double x) (float2Double y)
+formToFigure (GraficoTorta d c)    = Colored (BasicColor (pintura2Color c) ) $ figuresToFigure(generarGraficoTorta d)
 
 convertForms :: [Forma] -> [Figure]
 convertForms [] = []
