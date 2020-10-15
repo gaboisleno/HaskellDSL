@@ -39,6 +39,13 @@ formToFigure (Linea a c)           = Colored (BasicColor (pintura2Color c) ) $ L
 formToFigure (Elipse p x y c)      = Colored (BasicColor (pintura2Color c) ) $ Ellipse (punto2Point p) (float2Double x) (float2Double y)
 formToFigure (GraficoTorta d c)    = Colored (BasicColor (pintura2Color c) ) $ figuresToFigure(generarGraficoTorta d)
 
+
+loop2Formas :: Forma -> [Forma]
+loop2Formas (Repetidor (Cond x y z) xs)
+    | x > z =  []
+    | x < z = loop2Formas (Repetidor (Cond (x+y) y z) (xs)) ++ []
+    
+
 convertForms :: [Forma] -> [Figure]
 convertForms [] = []
 convertForms (x:xs) = [formToFigure x] ++ convertForms xs

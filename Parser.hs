@@ -55,6 +55,7 @@ parseFigura = parseTexto
            <|> parsePoligono
            <|> parseElipse
            <|> parseGraficoTorta
+           <|> parseLoop
 
 regularParse :: Parser a -> String -> Either ParseError a
 regularParse p = parse p ""
@@ -132,10 +133,10 @@ parsePoligono = do
 parseCirculo :: Parser Forma --Circulo (x y) j
 parseCirculo = do
                     lexeme $  try (string "Circulo")
-                    spaces
                     p      <- parsePunto
                     spaces
                     e0     <- floating
+                    spaces
                     c      <- try parseColor <|> defaultColor
                     return $  (Circulo p e0 c)
 
@@ -167,8 +168,27 @@ parseGraficoTorta = do
                         lexeme $  try (string "GraficoTorta")
                         spaces
                         p      <- many1 (try parseDato)
-                        c      <- parseColor <|> defaultColor
+                        c      <- try parseColor <|> defaultColor
                         return $  (GraficoTorta p c)
+
+
+parseLoop :: Parser Forma
+parseLoop = do
+            lexeme $ try (string "Repetir")
+            cond <- parseCond
+            spaces
+            stmt <- many1 (parseFigura)
+            lexeme $ string "Fin"
+            return $ (Repetidor cond stmt)
+
+parseCond :: Parser Cond
+parseCond = do
+            e0     <- many digit
+            lexeme $ char ':'
+            e1     <- many digit
+            lexeme $ char ':'
+            e2     <- many digit
+            return $ (Cond (read e0) (read e1) (read e2))
 {-------------------------------------------------}
 
 
