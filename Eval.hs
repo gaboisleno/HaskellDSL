@@ -43,7 +43,7 @@ formToFigure (GraficoTorta d c)    = Colored (BasicColor (pintura2Color c) ) $ f
 loop2Formas :: Forma -> [Forma]
 loop2Formas (Repetidor (Cond x y z) xs)
     | x > z =  []
-    | x < z = loop2Formas (Repetidor (Cond (x+y) y z) (xs)) ++ []
+    | x <= z = loop2Formas (Repetidor (Cond (x+y) y z) (xs)) ++ []
     
 
 convertForms :: [Forma] -> [Figure]
