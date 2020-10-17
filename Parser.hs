@@ -136,7 +136,9 @@ parseCirculo = do
                     p      <- parsePunto
                     spaces
                     e0     <- floating
+                    spaces
                     c      <- try parseColor <|> defaultColor
+                    spaces
                     return $  (Circulo p e0 c)
 
 parseElipse :: Parser Forma --Elipse (x y) j k
@@ -167,7 +169,8 @@ parseGraficoTorta = do
                         lexeme $  try (string "GraficoTorta")
                         spaces
                         p      <- many1 (try parseDato)
-                        c      <- parseColor <|> defaultColor
+                        c      <- try parseColor <|> defaultColor
+                        spaces
                         return $  (GraficoTorta p c)
 {-------------------------------------------------}
 
