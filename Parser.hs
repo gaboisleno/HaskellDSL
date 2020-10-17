@@ -34,6 +34,7 @@ process (x:xs) = case readExpr x of
 readExpr :: String -> Either ParseError Archivo
 readExpr input = parse (spaces >> parseExpr) "" input
 
+
 parseExpr :: Parser Archivo
 parseExpr =  parseArchivo    
          
@@ -45,8 +46,8 @@ parseArchivo = do
                 --f      <- ( `sepBy` string "++" ) parseFigura
                 f      <- many1 parseFigura
                 return $  (Archivo e0 f)
-         
-parseFigura :: Parser Forma
+     
+parseFigura :: Parser Comando
 parseFigura = parseTexto
            <|> parseLinea
            <|> parseCuadrado
@@ -69,19 +70,36 @@ lexeme p = do
             x <- p
             spaces
             return x
+            
+parseConst :: Parser FloatVar
+parseConst = do
+              e0 <- floating
+              return $ (Const e0)
+
+parseVar :: Parser FloatVar
+parseVar = do
+            spaces
+            e0 <- many (noneOf(" )"))
+            spaces
+            return $ (Var e0)
+
+parseFloatVar :: Parser FloatVar
+parseFloatVar = parseConst
+             <|> parseVar
 
 parsePunto :: Parser Punto --(x y)
 parsePunto = do
                 lexeme $ char '('
                 spaces
-                e0     <- floating
+                e0     <- parseFloatVar
                 spaces
-                e1     <- floating
+                e1     <- parseFloatVar
                 spaces
                 lexeme $ char ')'
                 return $  (Punto e0 e1)
 
-parseLinea :: Parser Forma --Linea (x y) (x y) ... n
+
+parseLinea :: Parser Comando --Linea (x y) (x y) ... n
 parseLinea = do
                 lexeme $  try (string "Linea")
                 spaces
@@ -89,7 +107,7 @@ parseLinea = do
                 c      <- try parseColor <|> defaultColor
                 return $  (Linea p c)
 
-parseTexto :: Parser Forma --Texto (x y) "Hola"
+parseTexto :: Parser Comando --Texto (x y) "Hola"
 parseTexto = do
                 lexeme $  try (string "Texto")
                 spaces
@@ -100,29 +118,29 @@ parseTexto = do
                 c      <- try parseColor <|> defaultColor
                 return $  (Texto p e0 c)
 
-parseCuadrado :: Parser Forma --Cuadrado (x y) j
+parseCuadrado :: Parser Comando --Cuadrado (x y) j
 parseCuadrado = do
                     lexeme $ try (string "Cuadrado")
                     p      <- parsePunto
                     spaces
-                    e0     <- floating
+                    e0     <- parseFloatVar
                     spaces
                     c      <- try parseColor <|> defaultColor
                     return $  (Cuadrado p e0 c)
 
-parseRectangulo :: Parser Forma --Rectangulo (x y) j k
+parseRectangulo :: Parser Comando --Rectangulo (x y) j k
 parseRectangulo = do
                     lexeme $  try (string "Rectangulo")
                     spaces
                     p      <- parsePunto
                     spaces
-                    e0     <- floating
+                    e0     <- parseFloatVar
                     spaces
-                    e1     <- floating
+                    e1     <- parseFloatVar
                     c      <- try parseColor <|> defaultColor
                     return $  (Rectangulo p e0 e1 c)
 
-parsePoligono :: Parser Forma --Poligono (x y) (x y) ... n
+parsePoligono :: Parser Comando --Poligono (x y) (x y) ... n
 parsePoligono = do
                     lexeme $  try (string "Poligono")
                     spaces
@@ -130,25 +148,25 @@ parsePoligono = do
                     c      <- try parseColor <|> defaultColor
                     return $  (Poligono p c)
 
-parseCirculo :: Parser Forma --Circulo (x y) j
+parseCirculo :: Parser Comando --Circulo (x y) j
 parseCirculo = do
                     lexeme $  try (string "Circulo")
                     p      <- parsePunto
                     spaces
-                    e0     <- floating
+                    e0     <- parseFloatVar
                     spaces
                     c      <- try parseColor <|> defaultColor
                     return $  (Circulo p e0 c)
 
-parseElipse :: Parser Forma --Elipse (x y) j k
+parseElipse :: Parser Comando --Elipse (x y) j k
 parseElipse = do
                 lexeme $ try (string "Elipse")
                 spaces
                 p      <- parsePunto
                 spaces
-                e0     <- floating
+                e0     <- parseFloatVar
                 spaces
-                e1     <- floating
+                e1     <- parseFloatVar
                 c      <- try parseColor <|> defaultColor
                 return $ (Elipse p e0 e1 c)
 
@@ -160,10 +178,10 @@ parseDato = do
                e1     <- many (noneOf("\""))
                lexeme $  char '"'
                spaces
-               e0     <- floating
+               e0     <- parseFloatVar
                return $  (Dato e0 e1)
 
-parseGraficoTorta :: Parser Forma --GraficoTorta "Algo" x "Otro" y ... n
+parseGraficoTorta :: Parser Comando --GraficoTorta "Algo" x "Otro" y ... n
 parseGraficoTorta = do
                         lexeme $  try (string "GraficoTorta")
                         spaces
@@ -172,7 +190,7 @@ parseGraficoTorta = do
                         return $  (GraficoTorta p c)
 
 
-parseLoop :: Parser Forma
+parseLoop :: Parser Comando
 parseLoop = do
             lexeme $ try (string "Repetir")
             cond <- parseCond
@@ -188,7 +206,9 @@ parseCond = do
             e1     <- many digit
             lexeme $ char ':'
             e2     <- many digit
-            return $ (Cond (read e0) (read e1) (read e2))
+            return $ (Cond (read e0) (read e1) (read e2))   
+                      
+         
 {-------------------------------------------------}
 
 
