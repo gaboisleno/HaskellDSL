@@ -9,6 +9,118 @@ import Text.LaTeX.Packages.TikZ.Simple      --Importar libreria HaTex TikZ
 
 import AST
 
+-- Estados
+type State = [(Variable,Comm)]
+
+
+-- Evalua un programa en el estado nulo
+eval :: Comm -> State
+eval p = evalComm p initState
+
+-- Estado nulo
+initState :: State
+initState = []
+
+-- Busca el valor de una variable en un estado
+lookfor :: Variable -> State -> Double
+lookfor var ( (x, (Let y (Const z))) :xs) = if   var == x 
+                                            then z
+                                            else lookfor var xs
+
+-- Cambia el valor de una variable en un estado
+updateVariable :: Variable -> Double -> State -> State
+updateVariable var valor [] = [(var, (Let var (Const valor)) )]
+updateVariable var valor ((x,y):xs) = if   var == x 
+                                      then (var, (Let var (Const valor))):xs 
+                                      else (x,y): updateVariable var valor xs
+
+-- Agrega forma a un estado
+updateForma :: Forma -> State -> State
+updateForma form estado = estado ++ [("Figura", (Draw form) )]
+
+listarPuntos :: [Punto] -> State -> [Punto]
+listarPuntos [(Punto x y)] estado = [Punto (Const (evalFloatExp x estado)) (Const (evalFloatExp y estado))]
+listarPuntos ((Punto x y):xs) estado = [Punto (Const (evalFloatExp x estado)) (Const (evalFloatExp y estado))] ++ listarPuntos xs estado
+
+listarDatos :: [Dato] -> State -> [Dato]
+listarDatos [(Dato x y)] estado = [Dato (Const (evalFloatExp x estado)) y]
+listarDatos ((Dato x y):xs) estado = [Dato (Const (evalFloatExp x estado)) y] ++ listarDatos xs estado
+
+-- Evalua un comando en un estado dado
+evalComm :: Comm -> State -> State
+evalComm Skip e = e
+evalComm (Let var x) estado = let valor = evalFloatExp x estado 
+                                in updateVariable var valor estado
+evalComm (Draw form) estado = updateForma (evalForma form estado) estado                           
+evalComm (Seq com1 com2) estado = let estado' = evalComm com1 estado
+                                  in evalComm com2 estado'
+evalComm (Cond expBool com1 com2) estado = if (evalBoolExp expBool estado)
+                                                 then evalComm com1 estado
+                                                 else evalComm com2 estado
+evalComm (Repeat expBool comm) estado = evalComm (Seq comm (Cond expBool Skip (Repeat expBool comm))) estado
+
+-- Evalua una forma
+evalForma :: Forma -> State -> Forma
+evalForma (Linea a c) estado = Linea (listarPuntos a estado) c
+evalForma (Texto (Punto x y) a c) estado = Texto (Punto (Const (evalFloatExp x estado)) (Const (evalFloatExp y estado))) a c
+evalForma (Cuadrado (Punto x y) a c) estado = Cuadrado (Punto (Const (evalFloatExp x estado)) (Const (evalFloatExp y estado))) (Const (evalFloatExp a estado)) c
+evalForma (Rectangulo (Punto x y) a b c) estado = Rectangulo (Punto (Const (evalFloatExp x estado)) (Const (evalFloatExp y estado))) (Const (evalFloatExp a estado)) (Const (evalFloatExp b estado)) c
+evalForma (Poligono a c) estado = Poligono (listarPuntos a estado) c
+evalForma (Circulo (Punto x y) a c) estado = Circulo (Punto (Const (evalFloatExp x estado)) (Const (evalFloatExp y estado))) (Const (evalFloatExp a estado)) c
+evalForma (Elipse (Punto x y) a b c) estado = Elipse (Punto (Const (evalFloatExp x estado)) (Const (evalFloatExp y estado))) (Const (evalFloatExp a estado)) (Const (evalFloatExp b estado)) c
+evalForma (GraficoTorta a c) estado = GraficoTorta (listarDatos a estado) c
+
+-- Evalua una expresion entera
+evalFloatExp :: FloatExp -> State -> Double
+evalFloatExp (Const valor) estado = valor
+evalFloatExp (Var variable) estado = lookfor variable estado
+evalFloatExp (UMinus expInt) estado = let valor = evalFloatExp expInt estado
+                                    in -valor
+evalFloatExp (Plus exp1 exp2) estado = let valor1 = evalFloatExp exp1 estado
+                                           valor2 = evalFloatExp exp2 estado
+                                           in valor1 + valor2
+
+evalFloatExp (Minus exp1 exp2) estado = let valor1 = evalFloatExp exp1 estado
+                                            valor2 = evalFloatExp exp2 estado
+                                            in valor1 - valor2
+
+evalFloatExp (Times exp1 exp2) estado = let valor1 = evalFloatExp exp1 estado
+                                            valor2 = evalFloatExp exp2 estado
+                                            in valor1 * valor2   
+
+--evalFloatExp (Div exp1 exp2) estado = let valor1 = evalFloatExp exp1 estado
+--                                        valor2 = evalFloatExp exp2 estado
+--                                        in div valor1 valor2                                                                                                                                                                     
+
+-- Evalua una expresion entera
+evalBoolExp :: BoolExp -> State -> Bool
+evalBoolExp BTrue estado = True
+evalBoolExp BFalse estado = False
+evalBoolExp (Eq exp1 exp2) estado = let valor1 = evalFloatExp exp1 estado
+                                        valor2 = evalFloatExp exp2 estado
+                                        in valor1 == valor2
+
+evalBoolExp (Lt exp1 exp2) estado = let valor1 = evalFloatExp exp1 estado
+                                        valor2 = evalFloatExp exp2 estado
+                                        in valor1 < valor2
+
+evalBoolExp (Gt exp1 exp2) estado = let valor1 = evalFloatExp exp1 estado
+                                        valor2 = evalFloatExp exp2 estado
+                                        in valor1 > valor2
+
+evalBoolExp (And exp1 exp2) estado = let valor1 = evalBoolExp exp1 estado
+                                         valor2 = evalBoolExp exp2 estado
+                                         in valor1 && valor2
+
+evalBoolExp (Or exp1 exp2) estado = let valor1 = evalBoolExp exp1 estado
+                                        valor2 = evalBoolExp exp2 estado
+                                        in valor1 || valor2
+evalBoolExp (Not exp1) estado = not (evalBoolExp exp1 estado)
+
+
+
+--Funciones para construir documento con dibujo
+
 tikzsimple :: [Figure] -> LaTeXT IO ()
 tikzsimple listaFigure = thePreamble >> document (theBody(listaFigure))
 
@@ -20,77 +132,70 @@ thePreamble = do
 theBody :: [Figure] -> LaTeXT IO ()
 theBody listaFigure = mapM_ (center . tikzpicture . figuretikz) [figuresToFigure(listaFigure)]
 
-getNombreArchivo :: Archivo -> [Char]
-getNombreArchivo (Archivo n f) = n
-
-archivoToFigures :: Archivo -> [Figure]
-archivoToFigures (Archivo n f) = map formToFigure f
-
 figuresToFigure :: [Figure] -> Figure
 figuresToFigure a = Figures a
 
-formToFigure :: Forma -> Figure
-formToFigure (Cuadrado p x c)      = Colored (BasicColor (pintura2Color c) ) $ Rectangle (punto2Point p) (float2Double x) (float2Double x)
-formToFigure (Texto p s c)         = Colored (BasicColor (pintura2Color c) ) $ Text (punto2Point p) (TeXRaw(T.pack s))
-formToFigure (Rectangulo p x y c)  = Colored (BasicColor (pintura2Color c) ) $ Rectangle (punto2Point p) (float2Double x) (float2Double y)
-formToFigure (Poligono a c)        = Colored (BasicColor (pintura2Color c) ) $ Polygon (map (punto2Point) a)
-formToFigure (Circulo p x c)       = Colored (BasicColor (pintura2Color c) ) $ Circle (punto2Point p) (float2Double x)
-formToFigure (Linea a c)           = Colored (BasicColor (pintura2Color c) ) $ Line (map (punto2Point) a)
-formToFigure (Elipse p x y c)      = Colored (BasicColor (pintura2Color c) ) $ Ellipse (punto2Point p) (float2Double x) (float2Double y)
-formToFigure (GraficoTorta d c)    = Colored (BasicColor (pintura2Color c) ) $ figuresToFigure(generarGraficoTorta d)
+puntoToPoint :: Punto -> Point
+puntoToPoint (Punto (Const a) (Const b)) = (a, b)
 
+pinturaToColor :: Pintura -> Color
+pinturaToColor c 
+             | c == Rojo     = Red
+             | c == Amarillo = Yellow
+             | c == Azul     = Blue
+             | c == Verde    = Green
+             | c == Cian     = Cyan
+             | c == Fucsia   = Magenta
+             | c == Blanco   = White
+             | otherwise     = Black
 
-loop2Formas :: Forma -> [Forma]
-loop2Formas (Repetidor (Cond x y z) xs)
-    | x > z =  []
-    | x <= z = loop2Formas (Repetidor (Cond (x+y) y z) (xs)) ++ []
-    
+formaToFigure :: Forma -> Figure
+formaToFigure (Texto p s c)                         = Colored (BasicColor (pinturaToColor c) ) $ Text (puntoToPoint p) (TeXRaw(T.pack s))
+formaToFigure (Linea a c)                           = Colored (BasicColor (pinturaToColor c) ) $ Line (map (puntoToPoint) a)
+formaToFigure (Cuadrado p (Const x) c)              = Colored (BasicColor (pinturaToColor c) ) $ Rectangle (puntoToPoint p) x x
+formaToFigure (Rectangulo p (Const x) (Const y) c)  = Colored (BasicColor (pinturaToColor c) ) $ Rectangle (puntoToPoint p) x y
+formaToFigure (Poligono a c)                        = Colored (BasicColor (pinturaToColor c) ) $ Polygon (map (puntoToPoint) a)
+formaToFigure (Circulo p (Const x) c)               = Colored (BasicColor (pinturaToColor c) ) $ Circle (puntoToPoint p) x
+formaToFigure (Elipse p (Const x) (Const y) c)      = Colored (BasicColor (pinturaToColor c) ) $ Ellipse (puntoToPoint p) x y
+formaToFigure (GraficoTorta d c)                    = Colored (BasicColor (pinturaToColor c) ) $ figuresToFigure(generarGraficoTorta d)
 
-convertForms :: [Forma] -> [Figure]
-convertForms [] = []
-convertForms (x:xs) = [formToFigure x] ++ convertForms xs
+convertirFormas :: State -> [Figure]
+convertirFormas [] = []
+convertirFormas ((var, Let v e):xs) = [] ++ convertirFormas xs
+convertirFormas ((var, Draw form):xs) = [formaToFigure form] ++ convertirFormas xs
 
-punto2Point :: Punto -> Point
-punto2Point (Punto a b) = ((float2Double a), (float2Double b))
+--Funciones para grafico de torta
 
-pintura2Color :: Pintura -> Color
-pintura2Color c 
-            | c == Rojo     = Red
-            | c == Amarillo = Yellow
-            | c == Azul     = Blue
-            | c == Verde    = Green
-            | c == Cian     = Cyan
-            | c == Fucsia   = Magenta
-            | c == Blanco   = White
-            | otherwise     = Black
-
-{----------Funciones para grafico de torta----------}
---Obtengo el Float de un Dato
-getFloatFromData :: Dato -> Float
-getFloatFromData (Dato a b) = a
+--Obtengo el Double de un Dato
+getDoubleFromData :: Dato -> Double
+getDoubleFromData (Dato (Const a) b) = a
 
 --Obtengo el String de un Dato
 getStringFromData :: Dato -> [Char]
 getStringFromData (Dato a b) = b
 
-porcentajeToPuntoLinea :: Float -> Point
-porcentajeToPuntoLinea p = (float2Double (cos ( (p*360/100) * 2 * pi/360) * 4), float2Double (sin ( (p*360/100) * 2 * pi/360) * 4))
+porcentajeToPuntoLinea :: Double -> Point
+porcentajeToPuntoLinea p =( (cos ( (p*360/100) * 2 * pi/360) * 4),  (sin ( (p*360/100) * 2 * pi/360) * 4)  )
 
-porcentajeToPuntoTexto :: Float -> Point
-porcentajeToPuntoTexto p = (float2Double (cos ( (p*360/100) * 2 * pi/360) * 2.5), float2Double (sin ( (p*360/100) * 2 * pi/360) * 2.5))
+porcentajeToPuntoTexto :: Double -> Point
+porcentajeToPuntoTexto p =( (cos ( (p*360/100) * 2 * pi/360) * 2.5), (sin ( (p*360/100) * 2 * pi/360) * 2.5)  )
 
 --Ejecuto funcion recursiva para generar las lineas del grafico de torta con los datos proporcionados y concateno el circulo base
 generarGraficoTorta :: [Dato] -> [Figure]
 generarGraficoTorta d = generarLineasGraficoTorta d 100 ++ [ LineWidth (Pt 2) $ Circle (0,0) 4, CircleFilled (0,0) 0.05, LineWidth (Pt 3) $ Line [(0,0), (4,0)] ]
 
 --Funcion recursiva para para generar las lineas del grafico de torta junto con el texto de cada Dato
-generarLineasGraficoTorta :: [Dato] -> Float -> [Figure]
+generarLineasGraficoTorta :: [Dato] -> Double -> [Figure]
 generarLineasGraficoTorta [] _ = []
-generarLineasGraficoTorta (x:xs) porcentaje = [datoToLineaGraficoTorta x porcentaje] ++ generarLineasGraficoTorta xs (porcentaje - getFloatFromData(x))
+generarLineasGraficoTorta (x:xs) porcentaje = [datoToLineaGraficoTorta x porcentaje] ++ generarLineasGraficoTorta xs (porcentaje - getDoubleFromData(x))
 
 --Convierto un Dato en una linea y un texto ubicados en la posicion correcta en relacion al porcentaje restante del circulo
-datoToLineaGraficoTorta :: Dato -> Float -> Figure
+datoToLineaGraficoTorta :: Dato -> Double -> Figure
 datoToLineaGraficoTorta d porcentaje = if porcentaje == 100
-                                        then Figures [LineWidth (Pt 3) $ Line [(0,0), porcentajeToPuntoLinea(getFloatFromData(d))],  Text (porcentajeToPuntoTexto(getFloatFromData(d)/2)) (TeXRaw(T.pack (getStringFromData(d))))]
-                                        else Figures [LineWidth (Pt 3) $ Line [(0,0), porcentajeToPuntoLinea( 100-porcentaje+getFloatFromData(d) )],  Text (porcentajeToPuntoTexto(100-porcentaje+getFloatFromData(d)/2)) (TeXRaw(T.pack (getStringFromData(d))))]
+                                        then Figures [LineWidth (Pt 3) $ Line [(0,0), porcentajeToPuntoLinea(getDoubleFromData(d))],  Text (porcentajeToPuntoTexto(getDoubleFromData(d)/2)) (TeXRaw(T.pack (getStringFromData(d))))]
+                                        else Figures [LineWidth (Pt 3) $ Line [(0,0), porcentajeToPuntoLinea( 100-porcentaje+getDoubleFromData(d) )],  Text (porcentajeToPuntoTexto(100-porcentaje+getDoubleFromData(d)/2)) (TeXRaw(T.pack (getStringFromData(d))))]
+
+
+
+
 
