@@ -21,9 +21,17 @@ run ifile =
     s <- readFile ifile
     case parseComm ifile s of
       Left error -> print error
-      Right t    -> print (eval t)
+      Right t    -> print t
     putStrLn "Done."
 --}
+
+generarPDF a = 
+            do
+                execLaTeXT (tikzsimple (convertirFormas(eval(a)))) >>= renderFile (getNombreArchivo(a)++".tex")
+                callCommand ("pdflatex "++getNombreArchivo(a)++".tex")
+                callCommand ("rm "++getNombreArchivo(a)++".aux")
+                callCommand ("rm "++getNombreArchivo(a)++".log")
+                callCommand ("rm "++getNombreArchivo(a)++".tex") 
 
 main :: IO ()
 main =
@@ -32,11 +40,9 @@ main =
         code <- readFile file
         case parseComm file code of
                Left error -> print error
-               Right t    -> execLaTeXT (tikzsimple (convertirFormas(eval(t)))) >>= renderFile (file++".tex")       
-        callCommand ("pdflatex "++file++".tex")
-        callCommand ("rm "++file++".aux")
-        callCommand ("rm "++file++".log")
-        callCommand ("rm "++file++".tex")
-        callCommand ("rm *.o *.hi")
+               Right t    -> mapM_ generarPDF (t)
+        callCommand ("rm *.o *.hi")  
         putStrLn "Done."
-     
+   
+
+ --execLaTeXT (tikzsimple (convertirFormas(eval(t)))) >>= renderFile (file++".tex")       

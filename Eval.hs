@@ -12,10 +12,9 @@ import AST
 -- Estados
 type State = [(Variable,Comm)]
 
-
 -- Evalua un programa en el estado nulo
-eval :: Comm -> State
-eval p = evalComm p initState
+eval :: Archivo -> State
+eval (Archivo nombre comm) = evalComm comm initState
 
 -- Estado nulo
 initState :: State
@@ -120,6 +119,9 @@ evalBoolExp (Not exp1) estado = not (evalBoolExp exp1 estado)
 
 
 --Funciones para construir documento con dibujo
+
+getNombreArchivo :: Archivo -> [Char]
+getNombreArchivo (Archivo nombre comm) = nombre
 
 tikzsimple :: [Figure] -> LaTeXT IO ()
 tikzsimple listaFigure = thePreamble >> document (theBody(listaFigure))

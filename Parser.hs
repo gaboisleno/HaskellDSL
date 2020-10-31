@@ -37,11 +37,36 @@ lis = makeTokenParser (emptyDef   { commentStart  = "/*"
                                   , reservedNames = ["true","false","if","then", ":=",
                                                      "else", "skip", "repeat", "until", "end",
                                                      "Linea", "Texto","Cuadrado", "Rectangulo",
-                                                     "Poligono", "Circulo", "Elipse",
-                                                     "GraficoTorta", ".c"]
+                                                     "Poligono", "Circulo", "Elipse", "newFile",
+                                                     "endFile", "GraficoTorta", ".c"]
                                   })
-  
-----------------------------------
+
+-----------------------------------
+--- Parser de archivos
+-----------------------------------
+{--
+commands :: String -> [Archivo]
+commands x = process (filter (not . null ) (split x))
+
+split :: String -> [String]   
+split [] = [""]
+split (c:cs) | c == '@' = "" : rest
+             | otherwise = (c : head rest) : tail rest
+    where rest = split cs
+
+
+process :: [String] -> [Archivo]
+process [] = []
+process (x:xs) = case readExpr x of
+                Left err -> fail ("Error: " ++ show err) putStrLn
+                Right archivo -> [archivo] ++ process xs
+
+readExpr :: String -> Either ParseError Archivo
+readExpr input = parse (spaces >> parseArchivo) "" input
+
+
+--}
+-----------------------------------
 --- Parser de expressiones enteras
 -----------------------------------
 
@@ -213,6 +238,22 @@ parseGraficoTorta = do
 --- Parser de comandos
 -----------------------------------
 
+parseArchivos ::  Parser [Archivo] 
+parseArchivos = do
+                 a <- many1 (try parseArchivo)
+                 return $ a
+
+parseArchivo ::  Parser Archivo 
+parseArchivo = do
+                spaces
+                e0     <- many (noneOf(" ="))
+                lexeme $  char '='
+                reserved lis "newFile"
+                f      <- comm
+                reserved lis "endFile"
+                return $  (Archivo e0 f)
+
+comm :: Parser Comm
 comm = parens lis comm
      <|> sequenceOfComm
 
@@ -220,6 +261,7 @@ listToSeq [] = Skip
 listToSeq [x] = x
 listToSeq (x:xs) = Seq x (listToSeq xs)
 
+sequenceOfComm :: Parser Comm
 sequenceOfComm =
   do list <- (sepBy1 comm' (semi lis))
      return $ (listToSeq list)
@@ -269,8 +311,8 @@ repeatComm =
 ------------------------------------
 -- Función de parseo
 ------------------------------------
-parseComm :: SourceName -> String -> Either ParseError Comm
-parseComm = parse (totParser comm)
+parseComm :: SourceName -> String -> Either ParseError [Archivo]
+parseComm = parse (totParser parseArchivos)
 
 
 ------------------------------------
