@@ -38,36 +38,30 @@ lis = makeTokenParser (emptyDef   { commentStart  = "/*"
                                                      "else", "skip", "repeat", "until", "end",
                                                      "Linea", "Texto","Cuadrado", "Rectangulo",
                                                      "Poligono", "Circulo", "Elipse", "newFile",
-                                                     "endFile", "GraficoTorta", ".c"]
+                                                     "endFile", "GraficoTorta", ".c", ".o"]
                                   })
 
 -----------------------------------
 --- Parser de archivos
 -----------------------------------
-{--
-commands :: String -> [Archivo]
-commands x = process (filter (not . null ) (split x))
 
-split :: String -> [String]   
-split [] = [""]
-split (c:cs) | c == '@' = "" : rest
-             | otherwise = (c : head rest) : tail rest
-    where rest = split cs
+parseArchivos ::  Parser [Archivo] 
+parseArchivos = do
+                 a <- many1 (try parseArchivo)
+                 return $ a
 
+parseArchivo ::  Parser Archivo 
+parseArchivo = do
+                spaces
+                e0     <- many (noneOf(" ="))
+                lexeme $  char '='
+                reserved lis "newFile"
+                f      <- comm
+                reserved lis "endFile"
+                return $  (Archivo e0 f)
 
-process :: [String] -> [Archivo]
-process [] = []
-process (x:xs) = case readExpr x of
-                Left err -> fail ("Error: " ++ show err) putStrLn
-                Right archivo -> [archivo] ++ process xs
-
-readExpr :: String -> Either ParseError Archivo
-readExpr input = parse (spaces >> parseArchivo) "" input
-
-
---}
 -----------------------------------
---- Parser de expressiones enteras
+--- Parser de expressiones flotantes
 -----------------------------------
 
 floatExp :: Parser FloatExp
@@ -80,12 +74,9 @@ aOperators = [ [Prefix (reservedOp lis "-" >> return (UMinus))          ]
                 Infix  (reservedOp lis "-" >> return (Minus )) AssocLeft]
               ]
 
--- reservedOp lis "?" >> return (Tern ))
-
 aTerm =  parens lis floatExp
      <|> liftM Var (identifier lis)
      <|> liftM Const (float lis)
-
 
 -----------------------------------
 --- Parser de expressiones booleanas
@@ -229,29 +220,15 @@ parseGraficoTorta = do
                         reserved lis "GraficoTorta"
                         spaces
                         p      <- many1 (try parseDato)
+                        o      <- try parseOtroDato <|> defaultOtroDato
                         c      <- try parseColor <|> defaultColor
                         spaces
-                        return $  (GraficoTorta p c)
+                        return $  (GraficoTorta p o c)
 
 
 -----------------------------------
 --- Parser de comandos
 -----------------------------------
-
-parseArchivos ::  Parser [Archivo] 
-parseArchivos = do
-                 a <- many1 (try parseArchivo)
-                 return $ a
-
-parseArchivo ::  Parser Archivo 
-parseArchivo = do
-                spaces
-                e0     <- many (noneOf(" ="))
-                lexeme $  char '='
-                reserved lis "newFile"
-                f      <- comm
-                reserved lis "endFile"
-                return $  (Archivo e0 f)
 
 comm :: Parser Comm
 comm = parens lis comm
@@ -311,6 +288,7 @@ repeatComm =
 ------------------------------------
 -- Función de parseo
 ------------------------------------
+
 parseComm :: SourceName -> String -> Either ParseError [Archivo]
 parseComm = parse (totParser parseArchivos)
 
@@ -347,3 +325,17 @@ foo x
     | x == "Verde"    = Verde
     | x == "Blanco"   = Blanco
     | otherwise       = Negro
+
+------------------------------------
+-- Función de parseo de etiqueta .o
+------------------------------------
+parseOtroDato :: Parser Dato
+parseOtroDato = do
+                  reserved lis ".o"
+                  lexeme $  char '"'
+                  e1     <- many (noneOf("\""))
+                  lexeme $  char '"'
+                  return $  (Dato (Const 1.0) e1)
+
+defaultOtroDato :: Parser Dato
+defaultOtroDato = return $  (Dato (Const 0.0) "")

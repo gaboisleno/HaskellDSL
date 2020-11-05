@@ -11,6 +11,7 @@ import Eval
 ---------------------------------------------------------
 
 {--
+-- Codigo para probar parser
 main :: IO ()
 main = do arg:_ <- getArgs
           run arg
@@ -21,7 +22,7 @@ run ifile =
     s <- readFile ifile
     case parseComm ifile s of
       Left error -> print error
-      Right t    -> print t
+      Right (x:xs)    -> print (eval x)
     putStrLn "Done."
 --}
 
@@ -43,6 +44,3 @@ main =
                Right t    -> mapM_ generarPDF (t)
         callCommand ("rm *.o *.hi")  
         putStrLn "Done."
-   
-
- --execLaTeXT (tikzsimple (convertirFormas(eval(t)))) >>= renderFile (file++".tex")       

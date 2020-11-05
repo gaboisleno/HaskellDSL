@@ -25,6 +25,7 @@ lookfor :: Variable -> State -> Double
 lookfor var ( (x, (Let y (Const z))) :xs) = if   var == x 
                                             then z
                                             else lookfor var xs
+lookfor var ( (x, y) :xs) = lookfor var xs
 
 -- Cambia el valor de una variable en un estado
 updateVariable :: Variable -> Double -> State -> State
@@ -60,14 +61,14 @@ evalComm (Repeat expBool comm) estado = evalComm (Seq comm (Cond expBool Skip (R
 
 -- Evalua una forma
 evalForma :: Forma -> State -> Forma
-evalForma (Linea a c) estado = Linea (listarPuntos a estado) c
-evalForma (Texto (Punto x y) a c) estado = Texto (Punto (Const (evalFloatExp x estado)) (Const (evalFloatExp y estado))) a c
-evalForma (Cuadrado (Punto x y) a c) estado = Cuadrado (Punto (Const (evalFloatExp x estado)) (Const (evalFloatExp y estado))) (Const (evalFloatExp a estado)) c
+evalForma (Linea a c) estado                    = Linea (listarPuntos a estado) c
+evalForma (Texto (Punto x y) a c) estado        = Texto (Punto (Const (evalFloatExp x estado)) (Const (evalFloatExp y estado))) a c
+evalForma (Cuadrado (Punto x y) a c) estado     = Cuadrado (Punto (Const (evalFloatExp x estado)) (Const (evalFloatExp y estado))) (Const (evalFloatExp a estado)) c
 evalForma (Rectangulo (Punto x y) a b c) estado = Rectangulo (Punto (Const (evalFloatExp x estado)) (Const (evalFloatExp y estado))) (Const (evalFloatExp a estado)) (Const (evalFloatExp b estado)) c
-evalForma (Poligono a c) estado = Poligono (listarPuntos a estado) c
-evalForma (Circulo (Punto x y) a c) estado = Circulo (Punto (Const (evalFloatExp x estado)) (Const (evalFloatExp y estado))) (Const (evalFloatExp a estado)) c
-evalForma (Elipse (Punto x y) a b c) estado = Elipse (Punto (Const (evalFloatExp x estado)) (Const (evalFloatExp y estado))) (Const (evalFloatExp a estado)) (Const (evalFloatExp b estado)) c
-evalForma (GraficoTorta a c) estado = GraficoTorta (listarDatos a estado) c
+evalForma (Poligono a c) estado                 = Poligono (listarPuntos a estado) c
+evalForma (Circulo (Punto x y) a c) estado      = Circulo (Punto (Const (evalFloatExp x estado)) (Const (evalFloatExp y estado))) (Const (evalFloatExp a estado)) c
+evalForma (Elipse (Punto x y) a b c) estado     = Elipse (Punto (Const (evalFloatExp x estado)) (Const (evalFloatExp y estado))) (Const (evalFloatExp a estado)) (Const (evalFloatExp b estado)) c
+evalForma (GraficoTorta a o c) estado           = GraficoTorta (listarDatos a estado) o c
 
 -- Evalua una expresion entera
 evalFloatExp :: FloatExp -> State -> Double
@@ -87,9 +88,9 @@ evalFloatExp (Times exp1 exp2) estado = let valor1 = evalFloatExp exp1 estado
                                             valor2 = evalFloatExp exp2 estado
                                             in valor1 * valor2   
 
---evalFloatExp (Div exp1 exp2) estado = let valor1 = evalFloatExp exp1 estado
---                                        valor2 = evalFloatExp exp2 estado
---                                        in div valor1 valor2                                                                                                                                                                     
+evalFloatExp (Div exp1 exp2) estado = let valor1 = evalFloatExp exp1 estado
+                                          valor2 = evalFloatExp exp2 estado
+                                          in (/) valor1 valor2                                                                                                                                                                     
 
 -- Evalua una expresion entera
 evalBoolExp :: BoolExp -> State -> Bool
@@ -159,7 +160,7 @@ formaToFigure (Rectangulo p (Const x) (Const y) c)  = Colored (BasicColor (pintu
 formaToFigure (Poligono a c)                        = Colored (BasicColor (pinturaToColor c) ) $ Polygon (map (puntoToPoint) a)
 formaToFigure (Circulo p (Const x) c)               = Colored (BasicColor (pinturaToColor c) ) $ Circle (puntoToPoint p) x
 formaToFigure (Elipse p (Const x) (Const y) c)      = Colored (BasicColor (pinturaToColor c) ) $ Ellipse (puntoToPoint p) x y
-formaToFigure (GraficoTorta d c)                    = Colored (BasicColor (pinturaToColor c) ) $ figuresToFigure(generarGraficoTorta d)
+formaToFigure (GraficoTorta d o c)                  = Colored (BasicColor (pinturaToColor c) ) $ figuresToFigure(generarGraficoTorta d o)
 
 convertirFormas :: State -> [Figure]
 convertirFormas [] = []
@@ -183,17 +184,25 @@ porcentajeToPuntoTexto :: Double -> Point
 porcentajeToPuntoTexto p =( (cos ( (p*360/100) * 2 * pi/360) * 2.5), (sin ( (p*360/100) * 2 * pi/360) * 2.5)  )
 
 --Ejecuto funcion recursiva para generar las lineas del grafico de torta con los datos proporcionados y concateno el circulo base
-generarGraficoTorta :: [Dato] -> [Figure]
-generarGraficoTorta d = generarLineasGraficoTorta d 100 ++ [ LineWidth (Pt 2) $ Circle (0,0) 4, CircleFilled (0,0) 0.05, LineWidth (Pt 3) $ Line [(0,0), (4,0)] ]
+generarGraficoTorta :: [Dato] -> Dato -> [Figure]
+generarGraficoTorta d (Dato (Const x) y) = if x == 0.0 
+                                        then generarLineasGraficoTorta d 100.0 ++ [ LineWidth (Pt 2) $ Circle (0,0) 4, CircleFilled (0,0) 0.05, LineWidth (Pt 3) $ Line [(0,0), (4,0)] ]
+                                        else  if obtenerPorcentaje d >= 100.0
+                                                then generarLineasGraficoTorta d 100 ++ [ LineWidth (Pt 2) $ Circle (0,0) 4, CircleFilled (0,0) 0.05, LineWidth (Pt 3) $ Line [(0,0), (4,0)] ]
+                                                else generarLineasGraficoTorta d 100 ++ [ LineWidth (Pt 2) $ Circle (0,0) 4, CircleFilled (0,0) 0.05, LineWidth (Pt 3) $ Line [(0,0), (4,0)] ] ++ [Text (porcentajeToPuntoTexto( 100-(( 100-(obtenerPorcentaje d))/2))) (TeXRaw(T.pack y))]
 
 --Funcion recursiva para para generar las lineas del grafico de torta junto con el texto de cada Dato
 generarLineasGraficoTorta :: [Dato] -> Double -> [Figure]
 generarLineasGraficoTorta [] _ = []
 generarLineasGraficoTorta (x:xs) porcentaje = [datoToLineaGraficoTorta x porcentaje] ++ generarLineasGraficoTorta xs (porcentaje - getDoubleFromData(x))
 
+obtenerPorcentaje :: [Dato] -> Double
+obtenerPorcentaje [] = 0.0
+obtenerPorcentaje ((Dato (Const x) y):xs) = x + obtenerPorcentaje(xs)
+
 --Convierto un Dato en una linea y un texto ubicados en la posicion correcta en relacion al porcentaje restante del circulo
 datoToLineaGraficoTorta :: Dato -> Double -> Figure
-datoToLineaGraficoTorta d porcentaje = if porcentaje == 100
+datoToLineaGraficoTorta d porcentaje = if porcentaje == 100.0
                                         then Figures [LineWidth (Pt 3) $ Line [(0,0), porcentajeToPuntoLinea(getDoubleFromData(d))],  Text (porcentajeToPuntoTexto(getDoubleFromData(d)/2)) (TeXRaw(T.pack (getStringFromData(d))))]
                                         else Figures [LineWidth (Pt 3) $ Line [(0,0), porcentajeToPuntoLinea( 100-porcentaje+getDoubleFromData(d) )],  Text (porcentajeToPuntoTexto(100-porcentaje+getDoubleFromData(d)/2)) (TeXRaw(T.pack (getStringFromData(d))))]
 

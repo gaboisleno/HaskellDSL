@@ -1,0 +1,63 @@
+// Demonstracion de Lenguaje
+
+
+Auto = newFile
+
+	x:=0.3;
+	
+	//Titulo
+	Texto  (3.5 3.0)  "Ejemplo Auto";
+	
+	//Forma del auto
+	Linea (0.0 0.0) (0.2 1.0) (1.7 1.0) (1.8 2.0) (4.8 2.0) (5.8 1.0) (7.0 1.0) (8.0 0.0) (0.0 0.0) .c "Rojo";
+	Rectangulo (2.2 1.7) 1.2 0.8 .c "Amarillo";
+	Poligono (3.8 0.90) (3.8 1.7) (4.8 1.7) (5.5 0.90) .c "Amarillo";
+	
+	//Ruedas del auto
+	repeat
+		Circulo (2.0 0.0) x;
+		Circulo (6.0 0.0) x;
+		x:=x+0.01
+	until
+		x > 0.6
+	end
+	
+endFile
+
+
+Forma = newFile
+
+	x:=1.0;
+	y:=3.0;
+	repeat
+		Cuadrado (0.0 4.0) x .c "Rojo";
+		Cuadrado (y 4.0) x .c "Azul";
+		Cuadrado (y x) x .c "Verde";
+		Cuadrado (0.0 x) x .c "Amarillo";
+		x:=x+0.1;
+		y:=y-0.1
+	until
+		x > 2.0
+	end
+	
+endFile
+
+/*
+Grafico = newFile
+	x:= 10.0;
+	y:= 55.0;
+	w:= 18.0;
+	z:= 17.0;
+	
+	if
+		y > 60.0
+	then
+		GraficoTorta "Harina" x "Agua" y "Azucar" w "Chocolate" z .o "Otro"
+	else
+		GraficoTorta "Harina" y "Agua" w "Azucar" z "Chocolate" x .o "Otro"
+	end
+		
+endFile
+*/
+
+

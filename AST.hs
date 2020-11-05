@@ -50,5 +50,5 @@ data Forma = Texto Punto [Char] Pintura
            | Circulo Punto FloatExp Pintura          
            | Poligono [Punto] Pintura             
            | Elipse Punto FloatExp FloatExp Pintura     
-           | GraficoTorta [Dato] Pintura
+           | GraficoTorta [Dato] Dato Pintura 
  deriving(Show, Eq)
