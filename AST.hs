@@ -18,7 +18,6 @@ data FloatExp = Const Double
 data BoolExp = BTrue
                | BFalse
                | Eq FloatExp FloatExp
-               | NEq FloatExp FloatExp
                | Lt FloatExp FloatExp
                | Gt FloatExp FloatExp
                | And BoolExp BoolExp

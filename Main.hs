@@ -28,8 +28,8 @@ run ifile =
 
 generarPDF a = 
             do
-                execLaTeXT (tikzsimple (convertirFormas(eval(a)))) >>= renderFile (getNombreArchivo(a)++".tex")
-                callCommand ("pdflatex "++getNombreArchivo(a)++".tex")
+                execLaTeXT (tikzsimple (convertirFormas(eval(a)))) >>= renderFile (getNombreArchivo(a)++".tex") --Generar archivo .tex
+                callCommand ("pdflatex "++getNombreArchivo(a)++".tex") --Transformar .tex en .pdf
                 callCommand ("rm "++getNombreArchivo(a)++".aux")
                 callCommand ("rm "++getNombreArchivo(a)++".log")
                 callCommand ("rm "++getNombreArchivo(a)++".tex") 

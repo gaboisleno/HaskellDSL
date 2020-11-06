@@ -104,8 +104,6 @@ rExpression =
 relation =   (reservedOp lis ">"  >> return Gt )
          <|> (reservedOp lis "<"  >> return Lt )
          <|> (reservedOp lis "="  >> return Eq )
-         <|> (reservedOp lis "<>" >> return NEq)
-
 
 -----------------------------------
 --- Parser de formas

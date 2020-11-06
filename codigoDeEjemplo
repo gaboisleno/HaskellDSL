@@ -42,7 +42,7 @@ Forma = newFile
 	
 endFile
 
-/*
+
 Grafico = newFile
 	x:= 10.0;
 	y:= 55.0;
@@ -50,14 +50,14 @@ Grafico = newFile
 	z:= 17.0;
 	
 	if
-		y > 60.0
+		y > (160.0/2.0) & w = 18.0
 	then
-		GraficoTorta "Harina" x "Agua" y "Azucar" w "Chocolate" z .o "Otro"
+		GraficoTorta "Harina" x "Agua" y "Azucar" w "Chocolate" z .o "Otro" .c "Azul"
 	else
 		GraficoTorta "Harina" y "Agua" w "Azucar" z "Chocolate" x .o "Otro"
 	end
 		
 endFile
-*/
+
 
 

@@ -12,7 +12,9 @@ import AST
 -- Estados
 type State = [(Variable,Comm)]
 
--- Evalua un programa en el estado nulo
+-- Evalua un programa en el estado nulo. Devuelvo un estado con los comandos.
+-- Si es una variable entonces su nombre y un comando Let
+-- Si es una forma entonces "Figura" y un comando Draw (Obtengo una constante de todas las expresiones que no lo sean)
 eval :: Archivo -> State
 eval (Archivo nombre comm) = evalComm comm initState
 
@@ -59,7 +61,7 @@ evalComm (Cond expBool com1 com2) estado = if (evalBoolExp expBool estado)
                                                  else evalComm com2 estado
 evalComm (Repeat expBool comm) estado = evalComm (Seq comm (Cond expBool Skip (Repeat expBool comm))) estado
 
--- Evalua una forma
+-- Evalua una forma. Transformo expresiones de una forma en constantes para luego convertirlas en Figure
 evalForma :: Forma -> State -> Forma
 evalForma (Linea a c) estado                    = Linea (listarPuntos a estado) c
 evalForma (Texto (Punto x y) a c) estado        = Texto (Punto (Const (evalFloatExp x estado)) (Const (evalFloatExp y estado))) a c
@@ -121,9 +123,11 @@ evalBoolExp (Not exp1) estado = not (evalBoolExp exp1 estado)
 
 --Funciones para construir documento con dibujo
 
+--Obtener el nombre del archivo para asignar a PDF
 getNombreArchivo :: Archivo -> [Char]
 getNombreArchivo (Archivo nombre comm) = nombre
 
+{-- Funciones para obtener documento PDF --}
 tikzsimple :: [Figure] -> LaTeXT IO ()
 tikzsimple listaFigure = thePreamble >> document (theBody(listaFigure))
 
@@ -132,12 +136,15 @@ thePreamble = do
   documentclass [] article
   usepackage [] tikz
 
+--A todo el listado de Figure lo transformo en un solo Figure antes de enviarlo
 theBody :: [Figure] -> LaTeXT IO ()
 theBody listaFigure = mapM_ (center . tikzpicture . figuretikz) [figuresToFigure(listaFigure)]
+{------------------------------------------}
 
 figuresToFigure :: [Figure] -> Figure
 figuresToFigure a = Figures a
 
+--Transformo el Punto del AST al Point de HaTeX
 puntoToPoint :: Punto -> Point
 puntoToPoint (Punto (Const a) (Const b)) = (a, b)
 
@@ -152,6 +159,7 @@ pinturaToColor c
              | c == Blanco   = White
              | otherwise     = Black
 
+--Transformo la Forma en un Figure de HaTeX
 formaToFigure :: Forma -> Figure
 formaToFigure (Texto p s c)                         = Colored (BasicColor (pinturaToColor c) ) $ Text (puntoToPoint p) (TeXRaw(T.pack s))
 formaToFigure (Linea a c)                           = Colored (BasicColor (pinturaToColor c) ) $ Line (map (puntoToPoint) a)
@@ -167,19 +175,21 @@ convertirFormas [] = []
 convertirFormas ((var, Let v e):xs) = [] ++ convertirFormas xs
 convertirFormas ((var, Draw form):xs) = [formaToFigure form] ++ convertirFormas xs
 
---Funciones para grafico de torta
 
+{--                   Funciones para grafico de torta                   --}
 --Obtengo el Double de un Dato
 getDoubleFromData :: Dato -> Double
 getDoubleFromData (Dato (Const a) b) = a
 
---Obtengo el String de un Dato
+--Obtengo el String de un Dato para imprimir en grafico de torta
 getStringFromData :: Dato -> [Char]
 getStringFromData (Dato a b) = b
 
+--Transformo un porcentaje en un punto para dibujar una linea basandome que la primer linea del circulo esta en la posicion: (0.0 0.0) (0.0 4.0)
 porcentajeToPuntoLinea :: Double -> Point
 porcentajeToPuntoLinea p =( (cos ( (p*360/100) * 2 * pi/360) * 4),  (sin ( (p*360/100) * 2 * pi/360) * 4)  )
 
+--Transformo un porcentaje en un punto para dibujar una texto basandome que la primer linea del circulo esta en la posicion: (0.0 0.0) (0.0 4.0)
 porcentajeToPuntoTexto :: Double -> Point
 porcentajeToPuntoTexto p =( (cos ( (p*360/100) * 2 * pi/360) * 2.5), (sin ( (p*360/100) * 2 * pi/360) * 2.5)  )
 
@@ -196,6 +206,7 @@ generarLineasGraficoTorta :: [Dato] -> Double -> [Figure]
 generarLineasGraficoTorta [] _ = []
 generarLineasGraficoTorta (x:xs) porcentaje = [datoToLineaGraficoTorta x porcentaje] ++ generarLineasGraficoTorta xs (porcentaje - getDoubleFromData(x))
 
+--Obtengo porcentaje total de un listado de Dato
 obtenerPorcentaje :: [Dato] -> Double
 obtenerPorcentaje [] = 0.0
 obtenerPorcentaje ((Dato (Const x) y):xs) = x + obtenerPorcentaje(xs)
@@ -206,7 +217,4 @@ datoToLineaGraficoTorta d porcentaje = if porcentaje == 100.0
                                         then Figures [LineWidth (Pt 3) $ Line [(0,0), porcentajeToPuntoLinea(getDoubleFromData(d))],  Text (porcentajeToPuntoTexto(getDoubleFromData(d)/2)) (TeXRaw(T.pack (getStringFromData(d))))]
                                         else Figures [LineWidth (Pt 3) $ Line [(0,0), porcentajeToPuntoLinea( 100-porcentaje+getDoubleFromData(d) )],  Text (porcentajeToPuntoTexto(100-porcentaje+getDoubleFromData(d)/2)) (TeXRaw(T.pack (getStringFromData(d))))]
 
-
-
-
-
+{------------------------------------------------------------------------}
